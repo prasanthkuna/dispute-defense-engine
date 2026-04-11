@@ -25,13 +25,13 @@
         "./*"
       ],
       "~backend/*": [
-        "../backend/*"
+        "../*"
       ],
       "~backend/client": [
         "./lib/client.ts"
       ],
       "~encore/*": [
-        "../backend/encore.gen/*"
+        "../encore.gen/*"
       ]
     }
   },
