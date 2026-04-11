@@ -10,9 +10,9 @@ import type { Draft } from "~backend/drafts/types";
 const MONO = "'IBM Plex Mono', monospace";
 
 interface Props {
-  caseData: Case;
-  approvals: Approval[];
-  drafts: Draft[];
+  caseData: any;
+  approvals: any[];
+  drafts: any[];
   onRefresh: () => void;
 }
 
@@ -96,7 +96,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
   const handleMarkReady = async () => {
     setLoading("MarkReady");
     try {
-      await backend.cases.update({ id: caseData.id, status: "Approval Pending", approval_state: "Pending" });
+      await backend.cases.update(caseData.id, { status: "Approval Pending", approval_state: "Pending" });
       await backend.audit.log({
         case_id: caseData.id,
         actor_type: "operator",
@@ -117,7 +117,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
   const handleSubmit = async () => {
     setLoading("Submit");
     try {
-      await backend.cases.update({ id: caseData.id, status: "Submitted" });
+      await backend.cases.update(caseData.id, { status: "Submitted" });
       await backend.audit.log({
         case_id: caseData.id,
         actor_type: "operator",

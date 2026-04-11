@@ -19,18 +19,25 @@ export type ConfidenceBand = "High" | "Medium" | "Low";
 export interface Case {
   id: string;
   dispute_id: string;
+  payment_id: string | null;
   merchant_name: string;
   amount: number;
   currency: string;
+  reason_code: string | null;
   dispute_reason: string;
+  respond_by: string | null;
   status: CaseStatus;
+  external_status: string | null;
+  phase: string | null;
+  network: string | null;
+  amount_deducted: number | null;
   recommendation: Recommendation | null;
   confidence_band: ConfidenceBand | null;
   evidence_completeness_score: number;
   approval_state: ApprovalState;
   scenario_type: ScenarioType;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CaseStats {
@@ -39,4 +46,5 @@ export interface CaseStats {
   approval_pending: number;
   submitted: number;
   auto_complete_rate: number;
+  defended_value: number;
 }

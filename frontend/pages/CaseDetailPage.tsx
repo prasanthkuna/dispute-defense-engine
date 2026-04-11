@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, Layers, ShieldCheck, FileText, Activity } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useCase,
@@ -14,22 +14,29 @@ import {
 import CaseHeader from "../components/case/CaseHeader";
 import DisputeSummary from "../components/case/DisputeSummary";
 import AgentTrace from "../components/case/AgentTrace";
-import EvidenceChecklist from "../components/case/EvidenceChecklist";
 import EvidencePack from "../components/case/EvidencePack";
 import PolicyDecisionCard from "../components/case/PolicyDecisionCard";
 import DraftEditor from "../components/case/DraftEditor";
 import ApprovalControls from "../components/case/ApprovalControls";
 import AuditTimeline from "../components/case/AuditTimeline";
+import EvidenceInspector from "../components/case/EvidenceInspector";
 
-const MONO = "'IBM Plex Mono', monospace";
+const MONO = "'Space Mono', monospace";
+const SYNE = "'Syne', sans-serif";
 
-const TABS = ["Overview", "Agent Trace", "Evidence", "Policy", "Draft", "Approvals", "Audit"];
+const TABS = [
+  { label: "Intelligence", icon: <ShieldCheck size={14} /> },
+  { label: "Agent Trace", icon: <Activity size={14} /> },
+  { label: "Evidence Pack", icon: <Layers size={14} /> },
+  { label: "Drafting", icon: <FileText size={14} /> },
+  { label: "Audit", icon: <Activity size={14} /> }
+];
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState("Overview");
+  const [tab, setTab] = useState("Intelligence");
 
   const { data: caseData, isLoading } = useCase(id!);
   const { data: evidenceData } = useCaseEvidence(id!);
@@ -49,21 +56,8 @@ export default function CaseDetailPage() {
     qc.invalidateQueries({ queryKey: ["audit", id] });
   };
 
-  if (isLoading) {
-    return (
-      <div style={{ padding: 40, textAlign: "center", fontFamily: MONO, color: "#6B7280" }}>
-        Loading case...
-      </div>
-    );
-  }
-
-  if (!caseData) {
-    return (
-      <div style={{ padding: 40, textAlign: "center", fontFamily: MONO, color: "#EF4444" }}>
-        Case not found.
-      </div>
-    );
-  }
+  if (isLoading) return <div style={{ padding: 100, textAlign: "center", fontFamily: MONO, color: "#3B82F6" }}>INGESTING_CASE_DATA...</div>;
+  if (!caseData) return <div style={{ padding: 100, textAlign: "center", fontFamily: MONO, color: "#EF4444" }}>ERROR::CASE_NOT_FOUND</div>;
 
   const evidence = evidenceData?.items ?? [];
   const steps = agentData?.steps ?? [];
@@ -73,112 +67,110 @@ export default function CaseDetailPage() {
   const logs = auditData?.logs ?? [];
 
   return (
-    <div style={{ padding: 24, maxWidth: 1400 }}>
-      {/* Breadcrumb */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+    <div style={{ padding: "40px 60px", maxWidth: 1600, margin: "0 auto" }}>
+      {/* Dossier Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }} className="animate-stagger">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/inbox")}
           style={{
-            background: "transparent",
-            border: "none",
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
             color: "#6B7280",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            gap: 4,
-            fontSize: 13,
-            padding: 0,
+            padding: "8px 12px",
+            borderRadius: 6,
+            gap: 8,
+            fontSize: 11,
+            fontFamily: MONO,
+            fontWeight: 700
           }}
         >
-          <ArrowLeft size={14} />
-          Inbox
+          <ArrowLeft size={14} /> BACK_TO_FEED
         </button>
-        <span style={{ color: "#3D4251", fontSize: 13 }}>/</span>
-        <span style={{ fontFamily: MONO, fontSize: 12, color: "#3B82F6" }}>{caseData.dispute_id}</span>
         <div style={{ flex: 1 }} />
         <button
           onClick={refresh}
           style={{
             background: "transparent",
-            border: "1px solid #2A2D36",
+            border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 6,
             color: "#6B7280",
-            padding: "5px 10px",
+            padding: "8px 12px",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            gap: 5,
-            fontSize: 12,
+            gap: 8,
+            fontSize: 11,
+            fontFamily: MONO,
+            fontWeight: 700
           }}
         >
-          <RefreshCw size={12} />
-          Refresh
+          <RefreshCw size={14} /> RELOAD_TELEMETRY
         </button>
       </div>
 
       <CaseHeader caseData={caseData} />
 
-      {/* Tabs */}
+      {/* Industrial Tabs */}
       <div style={{
         display: "flex",
-        gap: 0,
-        borderBottom: "1px solid #2A2D36",
-        marginBottom: 24,
-        marginTop: 20,
-        overflowX: "auto",
+        gap: 8,
+        marginBottom: 32,
+        marginTop: 32,
+        padding: 4,
+        background: "rgba(255,255,255,0.02)",
+        borderRadius: 8,
+        width: "fit-content"
       }}>
         {TABS.map((t) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={t.label}
+            onClick={() => setTab(t.label)}
             style={{
-              background: "transparent",
+              background: tab === t.label ? "#1F2937" : "transparent",
               border: "none",
-              borderBottom: tab === t ? "2px solid #3B82F6" : "2px solid transparent",
-              color: tab === t ? "#3B82F6" : "#6B7280",
-              padding: "10px 16px",
+              color: tab === t.label ? "#F1F4F9" : "#4B5563",
+              padding: "8px 20px",
               cursor: "pointer",
-              fontSize: 12,
-              fontWeight: 600,
+              fontSize: 10,
+              fontWeight: 700,
               fontFamily: MONO,
-              whiteSpace: "nowrap",
-              transition: "all 0.15s",
+              borderRadius: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              transition: "all 0.2s"
             }}
           >
-            {t.toUpperCase()}
+            {t.icon}
+            {t.label.toUpperCase()}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
-      {tab === "Overview" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <DisputeSummary caseData={caseData} />
-          <PolicyDecisionCard decision={decisions[0] ?? null} />
-          <div style={{ gridColumn: "1 / -1" }}>
-            <EvidenceChecklist evidence={evidence} score={caseData.evidence_completeness_score} />
+      {/* Tab Content Rendering */}
+      <div className="animate-stagger">
+        {tab === "Intelligence" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, alignItems: "start" }}>
+            <div style={{ display: "grid", gap: 24 }}>
+                <DisputeSummary caseData={caseData as any} />
+                <PolicyDecisionCard decision={(decisions && decisions[0]) ? (decisions[0] as any) : null} />
+             </div>
+             <EvidenceInspector />
           </div>
-        </div>
-      )}
-      {tab === "Agent Trace" && <AgentTrace steps={steps} />}
-      {tab === "Evidence" && <EvidencePack evidence={evidence} />}
-      {tab === "Policy" && <PolicyDecisionCard decision={decisions[0] ?? null} large />}
-      {tab === "Draft" && (
-        <DraftEditor
-          drafts={drafts}
-          caseId={caseData.id}
-          onRefresh={refresh}
-        />
-      )}
-      {tab === "Approvals" && (
-        <ApprovalControls
-          caseData={caseData}
-          approvals={approvals}
-          drafts={drafts}
-          onRefresh={refresh}
-        />
-      )}
-      {tab === "Audit" && <AuditTimeline logs={logs} />}
+        )}
+        {tab === "Agent Trace" && <AgentTrace steps={steps as any} />}
+        {tab === "Evidence Pack" && <EvidencePack evidence={evidence as any} />}
+        {tab === "Drafting" && (
+          <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: 24 }}>
+             <DraftEditor drafts={drafts as any} caseId={caseData.id} onRefresh={refresh} />
+             <ApprovalControls caseData={caseData as any} approvals={approvals as any} drafts={drafts as any} onRefresh={refresh} />
+          </div>
+        )}
+        {tab === "Audit" && <AuditTimeline logs={logs as any} />}
+      </div>
     </div>
   );
 }

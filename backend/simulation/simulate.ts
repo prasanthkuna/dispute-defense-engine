@@ -33,7 +33,20 @@ export async function runScenario(scenario_type: ScenarioType): Promise<Simulate
   await ingest.ingestEvent({
     external_event_id: disputeId,
     event_type: "dispute.created",
-    payload_json: { case_id: caseId, scenario_type, merchant_name: scenario.merchant_name },
+    payload: {
+      dispute: {
+        id: disputeId,
+        payment_id: `pay_${crypto.randomUUID().slice(0, 14)}`,
+        amount: scenario.amount * 100, // Razorpay uses paise
+        currency: "INR",
+        amount_deducted: scenario.amount * 100,
+        reason_code: scenario_type === "rto_accept" ? "customer_refused_delivery" : "products_not_received",
+        respond_by: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60),
+        status: "open",
+        phase: "retrieval",
+        created_at: Math.floor(Date.now() / 1000),
+      }
+    },
   });
 
   await audit.log({

@@ -117,6 +117,11 @@ export const runAgent = api<RunAgentParams, RunAgentResponse>(
 
     const score = getScoreForScenario(scenario_type);
 
+    // Fetch case context for policy
+    const caseData = await db.queryRow<{ reason_code: string | null, network: string | null }>`
+      SELECT reason_code, network FROM cases WHERE id = ${case_id}
+    `;
+
     // Run policy evaluation
     const logisticsStatus = scenario_type === "rto_accept" ? "RTO" : "Delivered";
     const podPresent = scenario_type === "slam_dunk_contest" || scenario_type === "vernacular_evidence_contest";
@@ -128,6 +133,7 @@ export const runAgent = api<RunAgentParams, RunAgentResponse>(
 
     const policyResult = await policy.evaluate({
       case_id,
+      reason_code: caseData?.reason_code ?? null,
       scenario_type,
       logistics_status: logisticsStatus,
       pod_present: podPresent,
@@ -135,6 +141,7 @@ export const runAgent = api<RunAgentParams, RunAgentResponse>(
       customer_communication_state: scenario_type === "weak_evidence_escalate" ? "none" : "found",
       evidence_completeness_score: score,
       missing_evidence_types: missingItems,
+      network: caseData?.network ?? null,
     });
 
     // Update case

@@ -10,7 +10,7 @@ const STATUS_COLORS: Record<string, { text: string; border: string }> = {
 };
 
 interface Props {
-  evidence: EvidenceItem[];
+  evidence: any[];
 }
 
 export default function EvidencePack({ evidence }: Props) {

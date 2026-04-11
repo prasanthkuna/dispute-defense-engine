@@ -28,7 +28,7 @@
         "../backend/*"
       ],
       "~backend/client": [
-        "./client.ts"
+        "./lib/client.ts"
       ],
       "~encore/*": [
         "../backend/encore.gen/*"

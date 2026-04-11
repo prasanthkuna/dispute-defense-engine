@@ -5,6 +5,7 @@ import Layout from "./components/Layout";
 import InboxPage from "./pages/InboxPage";
 import CaseDetailPage from "./pages/CaseDetailPage";
 import SimulationPage from "./pages/SimulationPage";
+import DashboardPage from "./pages/DashboardPage";
 import { RoleContext, useRoleState } from "./hooks/useRole";
 
 const queryClient = new QueryClient({
@@ -19,17 +20,19 @@ export default function App() {
       <RoleContext.Provider value={roleState}>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
           <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
             *, *::before, *::after { box-sizing: border-box; }
             html, body, #root { height: 100%; margin: 0; padding: 0; }
-            body { background: #0A0C10; color: #E8EAF0; font-family: 'Inter', sans-serif; }
-            ::-webkit-scrollbar { width: 6px; height: 6px; }
-            ::-webkit-scrollbar-track { background: #111318; }
-            ::-webkit-scrollbar-thumb { background: #2A2D36; border-radius: 3px; }
+            body { background: #050505; color: #F1F4F9; font-family: 'Inter', sans-serif; }
+            ::-webkit-scrollbar { width: 4px; height: 4px; }
+            ::-webkit-scrollbar-track { background: #08090C; }
+            ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 2px; }
           `}</style>
           <Routes>
             <Route path="/" element={<Layout />}>
-              <Route index element={<InboxPage />} />
+              <Route index element={<DashboardPage />} />
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="inbox" element={<InboxPage />} />
               <Route path="cases/:id" element={<CaseDetailPage />} />
               <Route path="simulation" element={<SimulationPage />} />
             </Route>

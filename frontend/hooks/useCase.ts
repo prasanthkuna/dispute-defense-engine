@@ -4,7 +4,7 @@ import backend from "~backend/client";
 export function useCase(id: string) {
   return useQuery({
     queryKey: ["case", id],
-    queryFn: () => backend.cases.get({ id }),
+    queryFn: () => backend.cases.get(id),
     enabled: !!id,
   });
 }

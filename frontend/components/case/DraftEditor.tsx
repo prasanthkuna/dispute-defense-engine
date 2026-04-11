@@ -7,8 +7,8 @@ import type { Draft } from "~backend/drafts/types";
 const MONO = "'IBM Plex Mono', monospace";
 
 interface Props {
-  drafts: Draft[];
   caseId: string;
+  drafts: any[];
   onRefresh: () => void;
 }
 
@@ -25,7 +25,7 @@ export default function DraftEditor({ drafts, caseId, onRefresh }: Props) {
     if (!draft) return;
     setSaving(true);
     try {
-      await backend.drafts.updateDraft({ id: draft.id, response_text: displayText });
+      await backend.drafts.updateDraft(draft.id, { response_text: displayText });
       toast({ title: "Draft saved", description: "Changes saved successfully." });
       onRefresh();
       setText(null);

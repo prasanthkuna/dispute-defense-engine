@@ -5,7 +5,7 @@ import type { AuditLog, ActorType } from "~backend/audit/types";
 const MONO = "'IBM Plex Mono', monospace";
 
 interface Props {
-  logs: AuditLog[];
+  logs: any[];
 }
 
 function actorConfig(type: ActorType) {
@@ -110,7 +110,7 @@ export default function AuditTimeline({ logs }: Props) {
                       {label}
                     </span>
                     <span style={{ fontFamily: MONO, fontSize: 12, color: "#E8EAF0", fontWeight: 600 }}>
-                      {formatAction(log.action_type)}
+                      {formatAction(log.action_type || "action")}
                     </span>
                     <span style={{ fontFamily: MONO, fontSize: 10, color: "#3D4251", marginLeft: "auto" }}>
                       {new Date(log.created_at).toLocaleString("en-IN", {

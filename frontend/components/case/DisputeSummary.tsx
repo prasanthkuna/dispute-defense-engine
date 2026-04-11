@@ -3,7 +3,7 @@ import type { Case } from "~backend/cases/types";
 const MONO = "'IBM Plex Mono', monospace";
 
 interface Props {
-  caseData: Case;
+  caseData: any;
 }
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
