@@ -14,7 +14,7 @@ export default function RoleSwitcher() {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{ fontSize: 11, color: "#6B7280", fontFamily: "'IBM Plex Mono', monospace" }}>ROLE:</span>
+      <span style={{ fontSize: 11, color: "#6B7280", fontFamily: "'IBM Plex Mono', monospace" }}>DEMO ROLE:</span>
       <div style={{ display: "flex", gap: 4 }}>
         {ROLES.map((r) => (
           <button

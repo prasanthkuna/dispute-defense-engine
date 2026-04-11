@@ -1,14 +1,32 @@
 import { api, APIError } from "encore.dev/api";
 import db from "../db";
-import type { Case } from "./types";
+import type { ApprovalState, Case, CaseStatus, ConfidenceBand, Recommendation } from "./types";
 
 interface UpdateCaseParams {
   id: string;
-  status?: string;
-  recommendation?: string;
-  confidence_band?: string;
+  status?: CaseStatus;
+  recommendation?: Recommendation;
+  confidence_band?: ConfidenceBand;
   evidence_completeness_score?: number;
-  approval_state?: string;
+  approval_state?: ApprovalState;
+}
+
+const VALID_STATUS_TRANSITIONS: Partial<Record<CaseStatus, CaseStatus[]>> = {
+  "New": ["Hunting Evidence"],
+  "Hunting Evidence": ["Ready for Review"],
+  "Ready for Review": ["Approval Pending", "Ready to Submit", "Submitted"],
+  "Approval Pending": ["Ready for Review", "Ready to Submit"],
+  "Ready to Submit": ["Submitted", "Ready for Review"],
+  "Submitted": ["Closed"],
+  "Closed": [],
+};
+
+const VALID_RECOMMENDATIONS: Recommendation[] = ["Contest", "Accept", "Escalate"];
+const VALID_CONFIDENCE_BANDS: ConfidenceBand[] = ["High", "Medium", "Low"];
+const VALID_APPROVAL_STATES: ApprovalState[] = ["Not Needed", "Pending", "Approved", "Rejected", "Sent Back"];
+
+function canTransition(from: CaseStatus, to: CaseStatus) {
+  return from === to || (VALID_STATUS_TRANSITIONS[from] ?? []).includes(to);
 }
 
 // Updates a dispute case's status, recommendation, or other mutable fields.
@@ -17,6 +35,29 @@ export const update = api<UpdateCaseParams, Case>(
   async ({ id, ...fields }) => {
     const existing = await db.queryRow<Case>`SELECT * FROM cases WHERE id = ${id}`;
     if (!existing) throw APIError.notFound("case not found");
+
+    if (fields.status !== undefined && !canTransition(existing.status, fields.status)) {
+      throw APIError.invalidArgument(`invalid status transition: ${existing.status} -> ${fields.status}`);
+    }
+
+    if (fields.recommendation !== undefined && !VALID_RECOMMENDATIONS.includes(fields.recommendation)) {
+      throw APIError.invalidArgument("invalid recommendation");
+    }
+
+    if (fields.confidence_band !== undefined && !VALID_CONFIDENCE_BANDS.includes(fields.confidence_band)) {
+      throw APIError.invalidArgument("invalid confidence band");
+    }
+
+    if (fields.approval_state !== undefined && !VALID_APPROVAL_STATES.includes(fields.approval_state)) {
+      throw APIError.invalidArgument("invalid approval state");
+    }
+
+    if (fields.evidence_completeness_score !== undefined) {
+      const score = fields.evidence_completeness_score;
+      if (score < 0 || score > 1) {
+        throw APIError.invalidArgument("evidence completeness score must be between 0 and 1");
+      }
+    }
 
     const updates: string[] = [];
     const values: (string | number | boolean | null)[] = [];

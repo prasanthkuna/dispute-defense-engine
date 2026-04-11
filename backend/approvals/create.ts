@@ -1,4 +1,4 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
 import db from "../db";
 import { cases, audit } from "~encore/clients";
 import type { Approval, CreateApprovalParams } from "./types";
@@ -7,6 +7,19 @@ import type { Approval, CreateApprovalParams } from "./types";
 export const createApproval = api<CreateApprovalParams, Approval>(
   { expose: true, method: "POST", path: "/approvals" },
   async (params) => {
+    if (params.actor_role !== "Approver" && params.actor_role !== "Admin") {
+      throw APIError.invalidArgument("only Approver or Admin can record approval decisions");
+    }
+
+    const caseRow = await db.queryRow<{ status: string; approval_state: string }>`
+      SELECT status, approval_state FROM cases WHERE id = ${params.case_id}
+    `;
+    if (!caseRow) throw APIError.notFound("case not found");
+
+    if (caseRow.status !== "Approval Pending" || caseRow.approval_state !== "Pending") {
+      throw APIError.invalidArgument("case is not currently awaiting approval");
+    }
+
     const id = crypto.randomUUID();
 
     const row = await db.queryRow<Approval>`

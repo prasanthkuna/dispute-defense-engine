@@ -17,7 +17,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <RoleContext.Provider value={roleState}>
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
           <style>{`
             @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
             *, *::before, *::after { box-sizing: border-box; }

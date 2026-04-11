@@ -57,7 +57,6 @@ export default function InboxPage() {
 
   return (
     <div style={{ padding: 24, maxWidth: 1400 }}>
-      {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#E8EAF0", fontFamily: MONO }}>
           Dispute Inbox
@@ -67,7 +66,6 @@ export default function InboxPage() {
         </p>
       </div>
 
-      {/* Stats */}
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
         <StatCard label="TOTAL CASES" value={stats?.total ?? 0} icon={TrendingUp} color="#3B82F6" />
         <StatCard label="READY FOR REVIEW" value={stats?.ready_for_review ?? 0} icon={CheckCircle} color="#10B981" />
@@ -76,7 +74,6 @@ export default function InboxPage() {
         <StatCard label="AUTO-COMPLETE %" value={`${stats?.auto_complete_rate ?? 0}%`} icon={Zap} color="#10B981" />
       </div>
 
-      {/* Filters */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
         <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
           <Search size={14} color="#6B7280" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
@@ -131,7 +128,6 @@ export default function InboxPage() {
         </button>
       </div>
 
-      {/* Table */}
       <div style={{
         background: "#111318",
         border: "1px solid #2A2D36",
@@ -142,16 +138,19 @@ export default function InboxPage() {
           <thead>
             <tr style={{ borderBottom: "1px solid #2A2D36" }}>
               {["Case ID", "Dispute ID", "Merchant", "Amount", "Status", "Score", "Recommendation", "Approval", "Created"].map((h) => (
-                <th key={h} style={{
-                  padding: "10px 14px",
-                  textAlign: "left",
-                  color: "#3D4251",
-                  fontFamily: MONO,
-                  fontWeight: 600,
-                  fontSize: 10,
-                  letterSpacing: "0.08em",
-                  whiteSpace: "nowrap",
-                }}>
+                <th
+                  key={h}
+                  style={{
+                    padding: "10px 14px",
+                    textAlign: "left",
+                    color: "#3D4251",
+                    fontFamily: MONO,
+                    fontWeight: 600,
+                    fontSize: 10,
+                    letterSpacing: "0.08em",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {h.toUpperCase()}
                 </th>
               ))}
@@ -184,7 +183,7 @@ export default function InboxPage() {
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
                   <td style={{ padding: "10px 14px", fontFamily: MONO, color: "#3B82F6", fontSize: 11 }}>
-                    {c.id.slice(0, 8)}…
+                    {c.id.slice(0, 8)}...
                   </td>
                   <td style={{ padding: "10px 14px", fontFamily: MONO, color: "#E8EAF0", fontSize: 11 }}>
                     {c.dispute_id}
@@ -193,7 +192,7 @@ export default function InboxPage() {
                     {c.merchant_name}
                   </td>
                   <td style={{ padding: "10px 14px", fontFamily: MONO, color: "#10B981", fontWeight: 600 }}>
-                    ₹{c.amount.toLocaleString("en-IN")}
+                    INR {c.amount.toLocaleString("en-IN")}
                   </td>
                   <td style={{ padding: "10px 14px" }}>
                     <StatusBadge status={c.status} />

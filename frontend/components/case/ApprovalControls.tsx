@@ -68,6 +68,8 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
   const draft = drafts[0] ?? null;
   const canOperator = role === "Operator" || role === "Admin";
   const canApprover = role === "Approver" || role === "Admin";
+  const needsApproval = caseData.approval_state !== "Not Needed";
+  const canSubmit = caseData.approval_state === "Approved" || caseData.approval_state === "Not Needed" || role === "Admin";
 
   const doApproval = async (decision: "Approved" | "Rejected" | "Sent Back") => {
     setLoading(decision);
@@ -166,7 +168,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         </div>
         <div style={{ width: 1, height: 36, background: "#2A2D36" }} />
         <div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>YOUR ROLE</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>YOUR DEMO ROLE</div>
           <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: "#3B82F6" }}>{role}</div>
         </div>
       </div>
@@ -181,21 +183,24 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
           <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", marginBottom: 12 }}>APPROVAL HISTORY</div>
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
             {approvals.map((a) => (
-              <div key={a.id} style={{
-                display: "flex",
-                gap: 12,
-                alignItems: "center",
-                padding: "10px 14px",
-                background: "#0A0C10",
-                borderRadius: 6,
-                border: "1px solid #2A2D36",
-              }}>
+              <div
+                key={a.id}
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "center",
+                  padding: "10px 14px",
+                  background: "#0A0C10",
+                  borderRadius: 6,
+                  border: "1px solid #2A2D36",
+                }}
+              >
                 {a.decision === "Approved" ? <CheckCircle size={16} color="#10B981" /> :
                   a.decision === "Rejected" ? <XCircle size={16} color="#EF4444" /> :
                   <RotateCcw size={16} color="#F59E0B" />}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: MONO, fontSize: 12, color: "#E8EAF0", fontWeight: 600 }}>
-                    {a.decision} — {a.actor_name} ({a.actor_role})
+                    {a.decision} - {a.actor_name} ({a.actor_role})
                   </div>
                   {a.notes && (
                     <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", marginTop: 2 }}>{a.notes}</div>
@@ -210,7 +215,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         </div>
       )}
 
-      {canApprover && (
+      {canApprover && needsApproval && (
         <div style={{
           background: "#111318",
           border: "1px solid #2A2D36",
@@ -264,14 +269,16 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         }}>
           <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", marginBottom: 16 }}>OPERATOR CONTROLS</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
-            <Btn
-              onClick={handleMarkReady}
-              disabled={!!loading || caseData.status === "Approval Pending" || caseData.status === "Submitted"}
-              color="#3B82F6"
-            >
-              <Clock size={14} /> Send for Approval
-            </Btn>
-            {(caseData.approval_state === "Approved" || role === "Admin") && (
+            {needsApproval && (
+              <Btn
+                onClick={handleMarkReady}
+                disabled={!!loading || caseData.status === "Approval Pending" || caseData.status === "Submitted"}
+                color="#3B82F6"
+              >
+                <Clock size={14} /> Send for Approval
+              </Btn>
+            )}
+            {canSubmit && (
               <Btn
                 onClick={handleSubmit}
                 disabled={!!loading || caseData.status === "Submitted"}

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Zap, RefreshCw, Database, CheckCircle, AlertTriangle, ArrowRight, Clock, Shield
+  Zap, RefreshCw, Database, CheckCircle, ArrowRight, Clock, Shield
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import backend from "~backend/client";
@@ -23,9 +23,9 @@ const SCENARIOS: ScenarioDefinition[] = [
     highlights: [
       "Payment captured (Razorpay)",
       "Order shipped (Shopify ORD-4521)",
-      "AWB SHP789012 — Delivered",
+      "AWB SHP789012 - Delivered",
       "POD signed by P. Sharma",
-      "Invoice INV-4521 (₹2,499)",
+      "Invoice INV-4521 (INR 2,499)",
       "Hindi complaint translated",
       "Merchant policy: Contest",
     ],
@@ -35,14 +35,14 @@ const SCENARIOS: ScenarioDefinition[] = [
     label: "Vernacular Evidence Contest",
     merchant_name: "House of Sarees",
     amount: 5899,
-    description: "WhatsApp OCR extracts Hindi delivery acknowledgement from customer. 7/8 evidence. Missing formal invoice — approval required.",
+    description: "WhatsApp OCR extracts Hindi delivery acknowledgement from customer. 7/8 evidence. Missing formal invoice - approval required.",
     expected_recommendation: "Contest",
     expected_confidence: "Medium",
     evidence_score: 0.875,
     highlights: [
       "Payment captured (Razorpay)",
       "Order shipped (Shopify ORD-7832)",
-      "AWB SHP345678 — Delivered",
+      "AWB SHP345678 - Delivered",
       "POD signed by M. Iyer",
       "WhatsApp OCR: 'haan, order mil gaya'",
       "Invoice MISSING",
@@ -54,14 +54,14 @@ const SCENARIOS: ScenarioDefinition[] = [
     label: "RTO Accept",
     merchant_name: "Gadget Lane",
     amount: 14999,
-    description: "Shiprocket tracking shows RTO — customer refused delivery. Policy mandates immediate acceptance.",
+    description: "Shiprocket tracking shows RTO - customer refused delivery. Policy mandates immediate acceptance.",
     expected_recommendation: "Accept",
     expected_confidence: "High",
     evidence_score: 0.5,
     highlights: [
       "Payment captured (Razorpay)",
       "Order shipped (Shopify ORD-2291)",
-      "DHL AWB — RTO Initiated",
+      "DHL AWB - RTO Initiated",
       "Customer refused delivery",
       "No POD available",
       "Policy: Accept RTO immediately",
@@ -159,12 +159,12 @@ export default function SimulationPage() {
   };
 
   const resetAll = async () => {
-    if (!confirm("This will delete ALL cases and data. Are you sure?")) return;
+    if (!confirm("This will delete all demo cases and data. Are you sure?")) return;
     setResetting(true);
     try {
       await backend.simulation.reset();
       setResults([]);
-      toast({ title: "Environment reset", description: "All data cleared." });
+      toast({ title: "Environment reset", description: "All data cleared. Use Seed All Scenarios to repopulate demo cases." });
     } catch (err) {
       console.error("Reset error:", err);
       toast({ title: "Reset failed", description: String(err), variant: "destructive" });
@@ -296,7 +296,7 @@ export default function SimulationPage() {
                   borderRadius: 4,
                   padding: "3px 8px",
                 }}>
-                  ₹{sc.amount.toLocaleString()}
+                  INR {sc.amount.toLocaleString()}
                 </div>
               </div>
 
@@ -305,13 +305,15 @@ export default function SimulationPage() {
               <div style={{ display: "flex", flexDirection: "column" as const, gap: 4 }}>
                 {sc.highlights.map((h, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: "50%",
-                      background: h.includes("MISSING") || h.includes("No ") ? "#EF4444" : "#10B981",
-                      flexShrink: 0,
-                    }} />
+                    <div
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: "50%",
+                        background: h.includes("MISSING") || h.includes("No ") ? "#EF4444" : "#10B981",
+                        flexShrink: 0,
+                      }}
+                    />
                     <span style={{ fontFamily: MONO, fontSize: 11, color: h.includes("MISSING") || h.includes("No ") ? "#EF444488" : "#9CA3AF" }}>
                       {h}
                     </span>
