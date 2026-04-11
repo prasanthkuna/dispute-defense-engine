@@ -1,6 +1,6 @@
 import { api } from "encore.dev/api";
-import { simulation } from "~encore/clients";
 import { SCENARIOS } from "./scenarios";
+import { runScenario } from "./simulate";
 
 interface SeedResponse {
   cases_created: number;
@@ -12,7 +12,7 @@ export const seed = api<void, SeedResponse>(
   async () => {
     let count = 0;
     for (const scenario of SCENARIOS) {
-      await simulation.simulate({ scenario_type: scenario.type });
+      await runScenario(scenario.type);
       count++;
     }
     return { cases_created: count };

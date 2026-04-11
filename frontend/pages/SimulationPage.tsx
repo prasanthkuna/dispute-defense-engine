@@ -6,6 +6,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import backend from "~backend/client";
 import type { ScenarioDefinition } from "~backend/simulation/scenarios";
+import type { ScenarioType } from "~backend/simulation/simulate";
 
 const MONO = "'IBM Plex Mono', monospace";
 
@@ -127,7 +128,7 @@ export default function SimulationPage() {
   const [resetting, setResetting] = useState(false);
   const [results, setResults] = useState<SimResult[]>([]);
 
-  const simulate = async (scenarioType: string) => {
+  const simulate = async (scenarioType: ScenarioType) => {
     setLoadingScenario(scenarioType);
     try {
       const res = await backend.simulation.simulate({ scenario_type: scenarioType });
