@@ -11,13 +11,20 @@ interface ListEvidenceResponse {
   items: EvidenceItem[];
 }
 
+function parseRow(row: EvidenceItem): EvidenceItem {
+  return {
+    ...row,
+    raw_content_json: typeof row.raw_content_json === "string" ? JSON.parse(row.raw_content_json) : row.raw_content_json,
+  };
+}
+
 // Lists all evidence items for a given case.
 export const listEvidence = api<ListEvidenceParams, ListEvidenceResponse>(
   { expose: true, method: "GET", path: "/evidence" },
   async ({ case_id }) => {
-    const items = await db.queryAll<EvidenceItem>`
+    const rows = await db.queryAll<EvidenceItem>`
       SELECT * FROM evidence_items WHERE case_id = ${case_id} ORDER BY collected_at ASC
     `;
-    return { items };
+    return { items: rows.map(parseRow) };
   }
 );

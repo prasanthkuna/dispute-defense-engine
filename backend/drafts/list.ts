@@ -11,13 +11,20 @@ interface ListDraftsResponse {
   drafts: Draft[];
 }
 
+function parseRow(row: Draft): Draft {
+  return {
+    ...row,
+    attachments_json: typeof row.attachments_json === "string" ? JSON.parse(row.attachments_json) : row.attachments_json,
+  };
+}
+
 // Lists all draft versions for a given case.
 export const listDrafts = api<ListDraftsParams, ListDraftsResponse>(
   { expose: true, method: "GET", path: "/drafts" },
   async ({ case_id }) => {
-    const draftList = await db.queryAll<Draft>`
+    const rows = await db.queryAll<Draft>`
       SELECT * FROM drafts WHERE case_id = ${case_id} ORDER BY version DESC
     `;
-    return { drafts: draftList };
+    return { drafts: rows.map(parseRow) };
   }
 );

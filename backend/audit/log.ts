@@ -2,6 +2,13 @@ import { api } from "encore.dev/api";
 import db from "../db";
 import type { AuditLog, CreateAuditLogParams } from "./types";
 
+function parseRow(row: AuditLog): AuditLog {
+  return {
+    ...row,
+    details_json: typeof row.details_json === "string" ? JSON.parse(row.details_json) : row.details_json,
+  };
+}
+
 // Creates an immutable audit log entry.
 export const log = api<CreateAuditLogParams, AuditLog>(
   { expose: true, method: "POST", path: "/audit" },
@@ -14,6 +21,6 @@ export const log = api<CreateAuditLogParams, AuditLog>(
       VALUES (${id}, ${params.case_id}, ${params.actor_type}, ${params.actor_name}, ${params.action_type}, ${detailsJson}::jsonb)
       RETURNING *
     `;
-    return row!;
+    return parseRow(row!);
   }
 );

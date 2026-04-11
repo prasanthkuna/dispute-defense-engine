@@ -16,6 +16,14 @@ import {
 } from "./evidence_factory";
 import { getDraftText } from "./draft_templates";
 
+function parseStep(row: AgentTraceStep): AgentTraceStep {
+  return {
+    ...row,
+    input_json: typeof row.input_json === "string" ? JSON.parse(row.input_json) : row.input_json,
+    output_json: typeof row.output_json === "string" ? JSON.parse(row.output_json) : row.output_json,
+  };
+}
+
 function getStepsForScenario(caseId: string, scenarioType: string) {
   switch (scenarioType) {
     case "slam_dunk_contest": return getSlamDunkSteps(caseId);
@@ -86,7 +94,7 @@ export const runAgent = api<RunAgentParams, RunAgentResponse>(
           ${step.observation_text}, ${step.status}
         ) RETURNING *
       `;
-      if (row) insertedSteps.push(row);
+      if (row) insertedSteps.push(parseStep(row));
     }
 
     // Insert evidence items

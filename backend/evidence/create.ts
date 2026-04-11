@@ -2,6 +2,13 @@ import { api } from "encore.dev/api";
 import db from "../db";
 import type { EvidenceItem, CreateEvidenceItemParams } from "./types";
 
+function parseRow(row: EvidenceItem): EvidenceItem {
+  return {
+    ...row,
+    raw_content_json: typeof row.raw_content_json === "string" ? JSON.parse(row.raw_content_json) : row.raw_content_json,
+  };
+}
+
 // Creates a new evidence item for a case.
 export const createEvidence = api<CreateEvidenceItemParams, EvidenceItem>(
   { expose: true, method: "POST", path: "/evidence" },
@@ -20,6 +27,6 @@ export const createEvidence = api<CreateEvidenceItemParams, EvidenceItem>(
         ${params.status}, ${params.confidence}
       ) RETURNING *
     `;
-    return row!;
+    return parseRow(row!);
   }
 );

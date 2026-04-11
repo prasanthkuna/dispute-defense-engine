@@ -3,6 +3,13 @@ import db from "../db";
 import { getDraftText } from "../agent/draft_templates";
 import type { Draft, CreateDraftParams } from "./types";
 
+function parseRow(row: Draft): Draft {
+  return {
+    ...row,
+    attachments_json: typeof row.attachments_json === "string" ? JSON.parse(row.attachments_json) : row.attachments_json,
+  };
+}
+
 // Generates a bank-facing dispute response draft for a case.
 export const createDraft = api<CreateDraftParams, Draft>(
   { expose: true, method: "POST", path: "/drafts" },
@@ -27,6 +34,6 @@ export const createDraft = api<CreateDraftParams, Draft>(
       VALUES (${id}, ${case_id}, ${version}, ${content.summary}, ${content.response}, ${attachJson}::jsonb)
       RETURNING *
     `;
-    return row!;
+    return parseRow(row!);
   }
 );
