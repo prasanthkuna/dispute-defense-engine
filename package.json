@@ -1,19 +1,10 @@
 {
-    "name":  "dispute-defense-hq",
-    "version":  "1.0.0",
-    "type":  "module",
-    "packageManager":  "bun",
-    "scripts":  {
-                    "build":  "cd .client_web \u0026\u0026 bun install \u0026\u0026 npx vite build --outDir=../ui/dist"
-                },
-    "workspaces":  [
-                       ".client_web"
-                   ],
-    "dependencies":  {
-                         "encore.dev":  "1.53.6"
-                     },
-    "devDependencies":  {
-                            "@types/node":  "^24.5.2",
-                            "typescript":  "^5.8.3"
-                        }
+  "name": "dispute-defense-monorepo",
+  "version": "1.0.0",
+  "type": "module",
+  "packageManager": "bun",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
 }
