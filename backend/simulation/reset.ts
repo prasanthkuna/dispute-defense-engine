@@ -11,7 +11,10 @@ interface ResetResponse {
 export const reset = api<void, ResetResponse>(
   { expose: true, method: "POST", path: "/simulation/reset" },
   async () => {
-    await db.exec`TRUNCATE TABLE audit_logs, approvals, drafts, policy_decisions, agent_trace_steps, agent_runs, evidence_items, events, cases CASCADE`;
+    // Use DELETE instead of TRUNCATE because the runtime DB role in Encore Cloud
+    // may not own every table and therefore can lack TRUNCATE privileges.
+    await db.exec`DELETE FROM events`;
+    await db.exec`DELETE FROM cases`;
 
     for (const scenario of SCENARIOS) {
       await runScenario(scenario.type);
