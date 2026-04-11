@@ -4,10 +4,10 @@
     "type":  "module",
     "packageManager":  "bun",
     "scripts":  {
-                    "build":  "cd frontend \u0026\u0026 bun install \u0026\u0026 npx vite build --outDir=../ui/dist"
+                    "build":  "cd .client_web \u0026\u0026 bun install \u0026\u0026 npx vite build --outDir=../ui/dist"
                 },
     "workspaces":  [
-                       "client_web"
+                       ".client_web"
                    ],
     "dependencies":  {
                          "encore.dev":  "1.53.6"

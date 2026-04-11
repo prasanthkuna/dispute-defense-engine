@@ -1,4 +1,4 @@
-client_web/
+.client_web/
 node_modules/
 .git/
 dist/
