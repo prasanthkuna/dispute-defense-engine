@@ -1,10 +1,13 @@
 {
-  "name": "dispute-defense-monorepo",
+  "name": "dispute-defense-backend",
   "version": "1.0.0",
   "type": "module",
   "packageManager": "bun",
-  "workspaces": [
-    "backend",
-    "frontend"
-  ]
+  "dependencies": {
+    "encore.dev": "1.53.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "typescript": "^5.8.3"
+  }
 }
