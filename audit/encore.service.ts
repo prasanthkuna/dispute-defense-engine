@@ -9,4 +9,4 @@ const cors = new CorsPolicy({
   max_age: 3600,
 });
 
-export default new Service("audit", { cors });
+export default new Service("audit", { cors: cors });

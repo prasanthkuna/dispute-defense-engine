@@ -1,4 +1,4 @@
-import Client, { Local, Environment } from "../client";
+import Client, { Local, Environment } from "../../client";
 
 const client = new Client(Environment("staging"));
 
