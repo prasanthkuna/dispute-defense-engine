@@ -16,7 +16,7 @@ export const Local: BaseURL = "http://localhost:4000"
  * Environment returns a BaseURL for calling the cloud environment with the given name.
  */
 export function Environment(name: string): BaseURL {
-    return `https://${name}-dispute-defense-engine-5ayi.encr.app`
+    return `https://${name}-dispute-defense-hq-7dki.encr.app`
 }
 
 /**

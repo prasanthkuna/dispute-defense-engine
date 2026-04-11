@@ -1,5 +1,5 @@
-import Client, { Local } from "../client";
+import Client, { Local, Environment } from "../client";
 
-const client = new Client(Local);
+const client = new Client(Environment("staging"));
 
 export default client;
