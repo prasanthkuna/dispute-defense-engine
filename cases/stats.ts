@@ -21,6 +21,9 @@ export const stats = api<void, CaseStats>(
     const defendedRow = await db.queryRow<{ total: number }>`
       SELECT COALESCE(SUM(amount), 0)::double precision AS total FROM cases
     `;
+    const earliestSlaRow = await db.queryRow<{ min_sla: string | null }>`
+      SELECT MIN(respond_by) AS min_sla FROM cases WHERE status = 'Approval Pending'
+    `;
 
     const autoComplete = total > 0 ? ((rfr?.count ?? 0) / total) * 100 : 0;
 
@@ -31,6 +34,7 @@ export const stats = api<void, CaseStats>(
       submitted: sub?.count ?? 0,
       auto_complete_rate: Math.round(autoComplete),
       defended_value: Math.round(defendedRow?.total ?? 0),
+      earliest_sla: earliestSlaRow?.min_sla ?? null,
     };
   }
 );

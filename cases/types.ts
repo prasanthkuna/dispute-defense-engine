@@ -47,4 +47,5 @@ export interface CaseStats {
   submitted: number;
   auto_complete_rate: number;
   defended_value: number;
+  earliest_sla?: string | null;
 }
