@@ -3,7 +3,7 @@ export function getDraftText(
   disputeId: string,
   caseData: { merchant_name: string; amount: number; currency: string }
 ): { summary: string; response: string; attachments: string[] } {
-  const amountStr = `₹${caseData.amount.toLocaleString("en-IN")}`;
+  const amountStr = `Rs ${caseData.amount.toLocaleString("en-IN")}`;
 
   if (scenarioType === "slam_dunk_contest") {
     return {
@@ -14,12 +14,12 @@ We are writing to formally contest the chargeback claim ${disputeId} filed for t
 
 Our records conclusively demonstrate that the order was delivered to the customer's registered address on 28th March 2026 at 14:30 IST. The following evidence is enclosed herewith:
 
-1. Shopify Order Confirmation — Order ORD-4521 (Customer: Priya Sharma, 42 Sector 14, Gurugram)
-2. Shiprocket Logistics Tracking Report — AWB SHP789012, status: Delivered (3 tracking events)
-3. Proof of Delivery (POD) — Signed by P. Sharma at the delivery address
-4. Tax Invoice INV-4521 — ₹2,499, GST compliant, HSN 61091000
-5. Customer Support Transcript TKT-98234 — Customer complaint in Hindi: "mujhe order nahi mila" (Translation: "I did not receive my order"), issued on 29th March 2026 — one day after confirmed delivery
-6. Merchant Dispute Policy — Urban Cart contests all INR disputes where POD is available
+1. Shopify Order Confirmation - Order ORD-4521 (Customer: Priya Sharma, 42 Sector 14, Gurugram)
+2. Shiprocket Logistics Tracking Report - AWB SHP789012, status: Delivered (3 tracking events)
+3. Proof of Delivery (POD) - Signed by P. Sharma at the delivery address
+4. Tax Invoice INV-4521 - Rs 2,499, GST compliant, HSN 61091000
+5. Customer Support Transcript TKT-98234 - Customer complaint in Hindi: "mujhe order nahi mila" (Translation: "I did not receive my order"), issued on 29th March 2026 - one day after confirmed delivery
+6. Merchant Dispute Policy - Urban Cart contests all INR disputes where POD is available
 
 Please note that the customer's complaint was raised the day after delivery was confirmed by our logistics partner with a recipient signature. This pattern is consistent with a fraudulent chargeback rather than a genuine non-delivery.
 
@@ -41,18 +41,18 @@ disputes@urbancart.in`,
 
   if (scenarioType === "vernacular_evidence_contest") {
     return {
-      summary: "Medium-confidence contest: WhatsApp OCR confirms delivery acknowledgement in Hindi. Missing formal invoice — approval required.",
+      summary: "Medium-confidence contest: WhatsApp OCR confirms delivery acknowledgement in Hindi. Missing formal invoice - approval required.",
       response: `Dear Nodal Officer,
 
 We are writing to contest the chargeback claim ${disputeId} for transaction pay_def456 amounting to ${amountStr}.
 
 Our evidence demonstrates that the order was delivered and the customer explicitly acknowledged receipt via WhatsApp on 25th March 2026. The following evidence is enclosed:
 
-1. Shopify Order Confirmation — Order ORD-7832 (Customer: Meenakshi Iyer)
-2. Delhivery Logistics Tracking — AWB SHP345678, status: Delivered on 24th March 2026
-3. Proof of Delivery — Signed by M. Iyer
-4. WhatsApp Communication Screenshot (OCR Extracted) — Customer message: "haan, order mil gaya. bahut sundar saree hai!" Translation: "Yes, the order arrived. Very beautiful saree!" — Sent on 25th March 2026 at 16:00 IST
-5. House of Sarees Dispute Policy — Contest with delivery proof and customer acknowledgement
+1. Shopify Order Confirmation - Order ORD-7832 (Customer: Meenakshi Iyer)
+2. Delhivery Logistics Tracking - AWB SHP345678, status: Delivered on 24th March 2026
+3. Proof of Delivery - Signed by M. Iyer
+4. WhatsApp Communication Screenshot (OCR Extracted) - Customer message: "haan, order mil gaya. bahut sundar saree hai!" Translation: "Yes, the order arrived. Very beautiful saree!" - Sent on 25th March 2026 at 16:00 IST
+5. House of Sarees Dispute Policy - Contest with delivery proof and customer acknowledgement
 
 The customer's own WhatsApp message, dated one day after delivery and extracted via certified OCR with 94% confidence, directly contradicts the INR claim.
 
@@ -113,7 +113,7 @@ This case requires manual escalation for human review.
 Chargeback claim ${disputeId} for transaction pay_jkl012 (${amountStr}) cannot be auto-resolved due to insufficient evidence:
 
 Issues identified:
-- Order ORD-8801 shows as UNFULFILLED in Shopify — no AWB assigned
+- Order ORD-8801 shows as UNFULFILLED in Shopify - no AWB assigned
 - No logistics tracking data available
 - No Proof of Delivery
 - No formal tax invoice found
@@ -126,10 +126,11 @@ Recommended action: Human review to determine whether this is a fulfillment fail
 
 Please escalate to Senior Dispute Analyst.
 
-— DDE Automated Triage System`,
+- DDE Automated Triage System`,
     attachments: [
       "Shopify_Order_ORD-8801_Partial.pdf",
       "Razorpay_Payment_pay_jkl012.pdf",
     ],
   };
 }
+

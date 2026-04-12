@@ -9,6 +9,7 @@ export type CaseStatus =
 
 export type Recommendation = "Contest" | "Accept" | "Escalate";
 export type ApprovalState = "Not Needed" | "Pending" | "Approved" | "Rejected" | "Sent Back";
+export type DisputePhase = "retrieval" | "chargeback" | "pre_arbitration";
 export type ScenarioType =
   | "slam_dunk_contest"
   | "vernacular_evidence_contest"
@@ -28,7 +29,7 @@ export interface Case {
   respond_by: string | null;
   status: CaseStatus;
   external_status: string | null;
-  phase: string | null;
+  phase: DisputePhase | null;
   network: string | null;
   amount_deducted: number | null;
   recommendation: Recommendation | null;
@@ -41,11 +42,11 @@ export interface Case {
 }
 
 export interface CaseStats {
-  total: number;
-  ready_for_review: number;
-  approval_pending: number;
-  submitted: number;
-  auto_complete_rate: number;
-  defended_value: number;
-  earliest_sla?: string | null;
+  total_cases: number;
+  total_disputed_amount: number;
+  contestable_amount: number;
+  acceptance_amount: number;
+  escalated_amount: number;
+  overdue_count: number;
+  due_in_24h_count: number;
 }

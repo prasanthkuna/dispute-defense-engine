@@ -22,7 +22,7 @@ export function getSlamDunkSteps(caseId: string): StepDef[] {
       tool_name: "get_razorpay_payment",
       input_json: { dispute_id: "disp_slam001", payment_id: "pay_abc123" },
       output_json: { payment_id: "pay_abc123", amount: 249900, currency: "INR", status: "captured", captured_at: "2026-03-25T10:15:00Z", method: "upi", vpa: "priya.sharma@okicici" },
-      observation_text: "Payment pay_abc123 found. Status: captured. Amount: ₹2,499. Method: UPI. Evidence recorded.",
+      observation_text: "Payment pay_abc123 found. Status: captured. Amount: Rs 2,499. Method: UPI. Evidence recorded.",
       status: "success",
     },
     {
@@ -46,7 +46,7 @@ export function getSlamDunkSteps(caseId: string): StepDef[] {
       tool_name: "get_invoice_record",
       input_json: { order_id: "ORD-4521", merchant: "urbancart" },
       output_json: { invoice_id: "INV-4521", order_id: "ORD-4521", issued_at: "2026-03-25T10:16:00Z", amount: 2499, gst_number: "06AABCU9603R1ZP", hsn_code: "61091000", line_items: [{ description: "Urban Cart Premium T-Shirt (L, Black)", qty: 1, rate: 2118.64, gst_18_pct: 380.36, total: 2499 }] },
-      observation_text: "Tax invoice INV-4521 found. Amount ₹2,499, GST compliant. HSN 61091000. Issued 2026-03-25.",
+      observation_text: "Tax invoice INV-4521 found. Amount Rs 2,499, GST compliant. HSN 61091000. Issued 2026-03-25.",
       status: "success",
     },
     {
@@ -62,7 +62,7 @@ export function getSlamDunkSteps(caseId: string): StepDef[] {
       tool_name: "translate_text",
       input_json: { text: "mujhe order nahi mila. maine payment kar diya tha.", source_lang: "hi", target_lang: "en" },
       output_json: { translated: "I did not receive my order. I had already made the payment.", confidence: 0.98, engine: "indicTrans2" },
-      observation_text: "Translation complete: 'I did not receive my order. I had already made the payment.' — Customer claim contradicted by Shiprocket POD.",
+      observation_text: "Translation complete: 'I did not receive my order. I had already made the payment.' - Customer claim contradicted by Shiprocket POD.",
       status: "success",
     },
     {
@@ -99,7 +99,7 @@ export function getVernacularSteps(caseId: string): StepDef[] {
       tool_name: null,
       input_json: { case_id: caseId, dispute_reason: "item_not_received" },
       output_json: {},
-      observation_text: "Received INR dispute for House of Sarees. Starting evidence collection. Customer communication in vernacular — activating OCR + translation tools.",
+      observation_text: "Received INR dispute for House of Sarees. Starting evidence collection. Customer communication in vernacular - activating OCR + translation tools.",
       status: "success",
     },
     {
@@ -107,7 +107,7 @@ export function getVernacularSteps(caseId: string): StepDef[] {
       tool_name: "get_razorpay_payment",
       input_json: { dispute_id: "disp_vern002", payment_id: "pay_def456" },
       output_json: { payment_id: "pay_def456", amount: 589900, currency: "INR", status: "captured", captured_at: "2026-03-20T14:22:00Z", method: "netbanking", bank: "HDFC" },
-      observation_text: "Payment pay_def456 found. Status: captured. Amount: ₹5,899. Method: NetBanking (HDFC).",
+      observation_text: "Payment pay_def456 found. Status: captured. Amount: Rs 5,899. Method: NetBanking (HDFC).",
       status: "success",
     },
     {
@@ -147,7 +147,7 @@ export function getVernacularSteps(caseId: string): StepDef[] {
       tool_name: "translate_text",
       input_json: { text: "haan, order mil gaya. bahut sundar saree hai!", source_lang: "hi", target_lang: "en" },
       output_json: { translated: "Yes, the order arrived. Very beautiful saree!", confidence: 0.97 },
-      observation_text: "Translation: 'Yes, the order arrived. Very beautiful saree!' — Customer acknowledges receipt. Strong counter-evidence to INR claim.",
+      observation_text: "Translation: 'Yes, the order arrived. Very beautiful saree!' - Customer acknowledges receipt. Strong counter-evidence to INR claim.",
       status: "success",
     },
     {
@@ -192,7 +192,7 @@ export function getRtoSteps(caseId: string): StepDef[] {
       tool_name: "get_razorpay_payment",
       input_json: { dispute_id: "disp_rto003", payment_id: "pay_ghi789" },
       output_json: { payment_id: "pay_ghi789", amount: 1499900, currency: "INR", status: "captured", captured_at: "2026-03-10T09:00:00Z", method: "card", card_network: "Visa" },
-      observation_text: "Payment pay_ghi789 found. Status: captured. Amount: ₹14,999. Method: Visa card.",
+      observation_text: "Payment pay_ghi789 found. Status: captured. Amount: Rs 14,999. Method: Visa card.",
       status: "success",
     },
     {
@@ -216,7 +216,7 @@ export function getRtoSteps(caseId: string): StepDef[] {
       tool_name: "get_invoice_record",
       input_json: { order_id: "ORD-2291", merchant: "gadgetlane" },
       output_json: { invoice_id: "INV-2291", amount: 14999, issued_at: "2026-03-10T09:01:00Z" },
-      observation_text: "Invoice INV-2291 found. Amount ₹14,999.",
+      observation_text: "Invoice INV-2291 found. Amount Rs 14,999.",
       status: "success",
     },
     {
@@ -232,7 +232,7 @@ export function getRtoSteps(caseId: string): StepDef[] {
       tool_name: null,
       input_json: {},
       output_json: { recommended_action: "Accept", confidence_band: "High", logistics_status: "RTO", approval_required: false },
-      observation_text: "Policy engine returned: ACCEPT (High confidence). Logistics status is RTO — non-delivery confirmed by carrier. No contest warranted. Audit log updated.",
+      observation_text: "Policy engine returned: ACCEPT (High confidence). Logistics status is RTO - non-delivery confirmed by carrier. No contest warranted. Audit log updated.",
       status: "success",
     },
   ];
@@ -253,7 +253,7 @@ export function getWeakEvidenceSteps(caseId: string): StepDef[] {
       tool_name: "get_razorpay_payment",
       input_json: { dispute_id: "disp_weak004", payment_id: "pay_jkl012" },
       output_json: { payment_id: "pay_jkl012", amount: 89900, currency: "INR", status: "captured", captured_at: "2026-03-18T11:00:00Z", method: "upi", vpa: "amit.joshi@paytm" },
-      observation_text: "Payment pay_jkl012 found. Amount: ₹899. Method: UPI.",
+      observation_text: "Payment pay_jkl012 found. Amount: Rs 899. Method: UPI.",
       status: "success",
     },
     {
@@ -285,8 +285,9 @@ export function getWeakEvidenceSteps(caseId: string): StepDef[] {
       tool_name: null,
       input_json: {},
       output_json: { evidence_count: 2, found: 2, missing: 6, score: 0.25, missing_items: ["awb_tracking", "logistics_status", "proof_of_delivery", "invoice", "customer_communication", "merchant_policy"] },
-      observation_text: "Evidence collection complete. Score: 2/8 (25%). CRITICAL: No AWB, no tracking, no POD, no invoice, no support record. Escalating — insufficient evidence to contest or accept.",
+      observation_text: "Evidence collection complete. Score: 2/8 (25%). CRITICAL: No AWB, no tracking, no POD, no invoice, no support record. Escalating - insufficient evidence to contest or accept.",
       status: "error",
     },
   ];
 }
+

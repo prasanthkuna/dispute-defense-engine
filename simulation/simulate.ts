@@ -3,6 +3,7 @@ import db from "../db";
 import { agent, audit, ingest } from "~encore/clients";
 import { SCENARIOS, type ScenarioDefinition } from "./scenarios";
 import type { Case } from "../cases/types";
+import type { DisputeWebhookPayload } from "../ingest/types";
 
 interface SimulateParams {
   scenario_type: ScenarioType;
@@ -15,46 +16,63 @@ interface SimulateResponse {
 
 export type ScenarioType = ScenarioDefinition["type"];
 
+function isoFromOffset(hoursFromNow: number): string {
+  return new Date(Date.now() + hoursFromNow * 60 * 60 * 1000).toISOString();
+}
+
 export async function runScenario(scenario_type: ScenarioType): Promise<SimulateResponse> {
-  const scenario = SCENARIOS.find((s) => s.type === scenario_type);
+  const scenario = SCENARIOS.find((item) => item.type === scenario_type);
   if (!scenario) throw new Error(`Unknown scenario: ${scenario_type}`);
 
-  const caseId = crypto.randomUUID();
   const disputeId = `DISP-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;
+  const respondBy = isoFromOffset(scenario.respond_by_offset_hours);
 
-  await db.exec`
-    INSERT INTO cases (id, dispute_id, merchant_name, amount, currency, dispute_reason, status, scenario_type)
-    VALUES (
-      ${caseId}, ${disputeId}, ${scenario.merchant_name}, ${scenario.amount},
-      'INR', 'item_not_received', 'New', ${scenario_type}
-    )
-  `;
+  const payload: DisputeWebhookPayload = {
+    dispute: {
+      id: disputeId,
+      payment_id: scenario.payment_id,
+      amount: Math.round(scenario.amount * 100),
+      amount_deducted: Math.round(scenario.amount_deducted * 100),
+      currency: "INR",
+      reason_code: scenario.reason_code,
+      respond_by: respondBy,
+      status: scenario.external_status,
+      phase: scenario.phase,
+      network: scenario.network,
+      merchant_name: scenario.merchant_name,
+      merchant_reference: scenario.merchant_reference,
+      created_at: Math.floor(Date.now() / 1000),
+    },
+  };
 
-  await ingest.ingestEvent({
+  const ingestResult = await ingest.ingestEvent({
     external_event_id: disputeId,
     event_type: "dispute.created",
-    payload: {
-      dispute: {
-        id: disputeId,
-        payment_id: `pay_${crypto.randomUUID().slice(0, 14)}`,
-        amount: scenario.amount * 100, // Razorpay uses paise
-        currency: "INR",
-        amount_deducted: scenario.amount * 100,
-        reason_code: scenario_type === "rto_accept" ? "customer_refused_delivery" : "products_not_received",
-        respond_by: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60),
-        status: "open",
-        phase: "retrieval",
-        created_at: Math.floor(Date.now() / 1000),
-      }
-    },
+    payload,
   });
+
+  const caseId = ingestResult.case_id;
+
+  await db.exec`
+    UPDATE cases
+    SET scenario_type = ${scenario_type}
+    WHERE id = ${caseId}
+  `;
 
   await audit.log({
     case_id: caseId,
     actor_type: "system",
     actor_name: "DDE System",
-    action_type: "case_created",
-    details_json: { dispute_id: disputeId, scenario_type, merchant_name: scenario.merchant_name, amount: scenario.amount },
+    action_type: "case_normalized",
+    details_json: {
+      dispute_id: disputeId,
+      payment_id: scenario.payment_id,
+      scenario_type,
+      merchant_name: scenario.merchant_name,
+      amount: scenario.amount,
+      phase: scenario.phase,
+      respond_by: respondBy,
+    },
   });
 
   await agent.runAgent({ case_id: caseId, scenario_type });

@@ -1,32 +1,33 @@
-import { api } from "encore.dev/api";
+import { api, Query } from "encore.dev/api";
 import db from "../db";
+import type { IngestedEvent } from "./types";
 
-interface EventLog {
-  id: string;
-  external_event_id: string;
-  event_type: string;
-  processed_at: string;
-  payload_json: any;
+interface ListEventsParams {
+  case_id?: Query<string>;
 }
 
 interface ListEventsResponse {
-  events: EventLog[];
+  events: IngestedEvent[];
 }
 
-// Returns the most recent 50 webhook events for the Live Console.
-export const list = api<void, ListEventsResponse>(
+// Returns recent webhook events, optionally filtered to a single case.
+export const list = api<ListEventsParams, ListEventsResponse>(
   { expose: true, method: "GET", path: "/ingest/events" },
-  async () => {
-    const rows = db.query<EventLog>`
-      SELECT id, external_event_id, event_type, processed_at, payload_json
+  async (params) => {
+    const values: string[] = [];
+    let query = `
+      SELECT id, external_event_id, case_id, event_type, processed_at, payload_json
       FROM events
-      ORDER BY processed_at DESC
-      LIMIT 50
     `;
-    const events: EventLog[] = [];
-    for await (const row of rows) {
-      events.push(row);
+
+    if (params.case_id) {
+      query += ` WHERE case_id = $1`;
+      values.push(params.case_id);
     }
-    return { events };
+
+    query += ` ORDER BY processed_at DESC NULLS LAST LIMIT 50`;
+
+    const rows = await db.rawQueryAll<IngestedEvent>(query, ...values);
+    return { events: rows };
   }
 );

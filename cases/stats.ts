@@ -6,35 +6,30 @@ import type { CaseStats } from "./types";
 export const stats = api<void, CaseStats>(
   { expose: true, method: "GET", path: "/cases/stats" },
   async () => {
-    const totalRow = await db.queryRow<{ count: number }>`SELECT COUNT(*)::int AS count FROM cases`;
-    const total = totalRow?.count ?? 0;
-
-    const rfr = await db.queryRow<{ count: number }>`
-      SELECT COUNT(*)::int AS count FROM cases WHERE status = 'Ready for Review'
-    `;
-    const ap = await db.queryRow<{ count: number }>`
-      SELECT COUNT(*)::int AS count FROM cases WHERE status = 'Approval Pending'
-    `;
-    const sub = await db.queryRow<{ count: number }>`
-      SELECT COUNT(*)::int AS count FROM cases WHERE status = 'Submitted'
-    `;
-    const defendedRow = await db.queryRow<{ total: number }>`
-      SELECT COALESCE(SUM(amount), 0)::double precision AS total FROM cases
-    `;
-    const earliestSlaRow = await db.queryRow<{ min_sla: string | null }>`
-      SELECT MIN(respond_by) AS min_sla FROM cases WHERE status = 'Approval Pending'
+    const row = await db.queryRow<CaseStats>`
+      SELECT
+        COUNT(*)::int AS total_cases,
+        COALESCE(SUM(amount), 0)::double precision AS total_disputed_amount,
+        COALESCE(SUM(amount) FILTER (WHERE recommendation = 'Contest'), 0)::double precision AS contestable_amount,
+        COALESCE(SUM(amount) FILTER (WHERE recommendation = 'Accept'), 0)::double precision AS acceptance_amount,
+        COALESCE(SUM(amount) FILTER (WHERE recommendation = 'Escalate'), 0)::double precision AS escalated_amount,
+        COUNT(*) FILTER (WHERE respond_by IS NOT NULL AND respond_by < NOW())::int AS overdue_count,
+        COUNT(*) FILTER (
+          WHERE respond_by IS NOT NULL
+            AND respond_by >= NOW()
+            AND respond_by < NOW() + INTERVAL '24 hours'
+        )::int AS due_in_24h_count
+      FROM cases
     `;
 
-    const autoComplete = total > 0 ? ((rfr?.count ?? 0) / total) * 100 : 0;
-
-    return {
-      total,
-      ready_for_review: rfr?.count ?? 0,
-      approval_pending: ap?.count ?? 0,
-      submitted: sub?.count ?? 0,
-      auto_complete_rate: Math.round(autoComplete),
-      defended_value: Math.round(defendedRow?.total ?? 0),
-      earliest_sla: earliestSlaRow?.min_sla ?? null,
+    return row ?? {
+      total_cases: 0,
+      total_disputed_amount: 0,
+      contestable_amount: 0,
+      acceptance_amount: 0,
+      escalated_amount: 0,
+      overdue_count: 0,
+      due_in_24h_count: 0,
     };
   }
 );
