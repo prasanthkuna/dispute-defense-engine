@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import client from "@/lib/client";
 import type { IngestedEvent } from "~backend/ingest/types";
-import { SCENARIOS } from "../../simulation/scenarios";
+import { SCENARIOS } from "../lib/scenarios";
 import { fetchApi } from "../lib/api";
 import { useCaseStats } from "../hooks/useCases";
 import { formatCurrency, formatDateTime } from "../lib/disputes";
