@@ -7,7 +7,9 @@
 		"module": "ES2022",
 		"types": ["node"],
 		"paths": {
-			"~encore/*": ["./encore.gen/*"]
+			"~encore/*": ["./encore.gen/*"],
+			"~backend/*": ["./*"],
+			"~backend/client": ["./frontend/lib/client.ts"]
 		},
 
 		/* Workspace Settings */
@@ -27,5 +29,10 @@
 		/* Advanced Options */
 		"forceConsistentCasingInFileNames": true,
 		"skipLibCheck": true
-	}
+	},
+	"exclude": [
+		"frontend",
+		"node_modules",
+		"dist"
+	]
 }
