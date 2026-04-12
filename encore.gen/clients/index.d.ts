@@ -1,0 +1,9 @@
+export * as agent from "../internal/clients/agent/endpoints";
+export * as approvals from "../internal/clients/approvals/endpoints";
+export * as audit from "../internal/clients/audit/endpoints";
+export * as cases from "../internal/clients/cases/endpoints";
+export * as drafts from "../internal/clients/drafts/endpoints";
+export * as evidence from "../internal/clients/evidence/endpoints";
+export * as ingest from "../internal/clients/ingest/endpoints";
+export * as policy from "../internal/clients/policy/endpoints";
+export * as simulation from "../internal/clients/simulation/endpoints";
