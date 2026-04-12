@@ -7,9 +7,7 @@
 		"module": "ES2022",
 		"types": ["node"],
 		"paths": {
-			"~encore/*": ["./encore.gen/*"],
-			"~backend/*": ["./*"],
-			"~backend/client": ["./frontend/lib/client.ts"]
+			"~encore/*": ["./encore.gen/*"]
 		},
 
 		/* Workspace Settings */
@@ -30,9 +28,26 @@
 		"forceConsistentCasingInFileNames": true,
 		"skipLibCheck": true
 	},
+	"include": [
+		"agent/**/*.ts",
+		"approvals/**/*.ts",
+		"audit/**/*.ts",
+		"backend/**/*.ts",
+		"cases/**/*.ts",
+		"db/**/*.ts",
+		"drafts/**/*.ts",
+		"evidence/**/*.ts",
+		"ingest/**/*.ts",
+		"policy/**/*.ts",
+		"simulation/**/*.ts",
+		"skills/**/*.ts",
+		"*.ts"
+	],
 	"exclude": [
 		"frontend",
 		"node_modules",
-		"dist"
+		"dist",
+		".encore",
+		"encore.gen"
 	]
 }
