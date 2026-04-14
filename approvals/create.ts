@@ -50,6 +50,15 @@ export const createApproval = api<CreateApprovalParams, Approval>(
       approval_state: newApprovalState as any,
     });
 
+    if (params.draft_id) {
+      const draftStatus = params.decision === "Approved" ? "ready" : "draft";
+      await db.exec`
+        UPDATE drafts
+        SET draft_status = ${draftStatus}, updated_at = NOW()
+        WHERE id = ${params.draft_id}
+      `;
+    }
+
     await audit.log({
       case_id: params.case_id,
       actor_type: "approver",

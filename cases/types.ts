@@ -5,6 +5,7 @@ export type CaseStatus =
   | "Approval Pending"
   | "Ready to Submit"
   | "Submitted"
+  | "Action Required"
   | "Closed";
 
 export type Recommendation = "Contest" | "Accept" | "Escalate";
@@ -37,6 +38,8 @@ export interface Case {
   evidence_completeness_score: number;
   approval_state: ApprovalState;
   scenario_type: ScenarioType;
+  last_webhook_at: string;
+  rework_reason: string | null;
   created_at: string;
   updated_at: string;
 }

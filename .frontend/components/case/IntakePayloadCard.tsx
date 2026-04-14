@@ -41,6 +41,8 @@ export default function IntakePayloadCard({ caseData, events }: Props) {
           <MetaRow label="PHASE" value={formatPhase(caseData.phase)} />
           <MetaRow label="NETWORK" value={caseData.network ?? "Unknown"} />
           <MetaRow label="EXTERNAL STATUS" value={caseData.external_status ?? "Unknown"} />
+          <MetaRow label="LAST WEBHOOK" value={formatDateTime(caseData.last_webhook_at)} />
+          <MetaRow label="REWORK REASON" value={caseData.rework_reason ?? "None"} />
           <MetaRow label="RESPOND BY" value={formatDateTime(caseData.respond_by)} />
           <MetaRow label="AMOUNT" value={formatCurrency(caseData.amount, caseData.currency)} />
           <MetaRow label="AMOUNT DEDUCTED" value={formatCurrency(caseData.amount_deducted, caseData.currency)} />

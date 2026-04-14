@@ -1,7 +1,9 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
 import db from "../db";
 import { getDraftText } from "../agent/draft_templates";
 import type { Draft, CreateDraftParams } from "./types";
+
+const MAX_SUMMARY_LENGTH = 1000;
 
 function parseRow(row: Draft): Draft {
   return {
@@ -26,12 +28,16 @@ export const createDraft = api<CreateDraftParams, Draft>(
     const scenario = caseRow?.scenario_type ?? "slam_dunk_contest";
     const content = getDraftText(scenario, caseRow?.dispute_id ?? "disp_unknown", caseRow ?? { merchant_name: "Merchant", amount: 0, currency: "INR" });
 
+    if (content.summary.length > MAX_SUMMARY_LENGTH) {
+      throw APIError.invalidArgument(`generated summary exceeded ${MAX_SUMMARY_LENGTH} characters`);
+    }
+
     const id = crypto.randomUUID();
     const attachJson = JSON.stringify(content.attachments);
 
     const row = await db.queryRow<Draft>`
-      INSERT INTO drafts (id, case_id, version, summary_text, response_text, attachments_json)
-      VALUES (${id}, ${case_id}, ${version}, ${content.summary}, ${content.response}, ${attachJson}::jsonb)
+      INSERT INTO drafts (id, case_id, version, draft_status, summary_text, response_text, attachments_json)
+      VALUES (${id}, ${case_id}, ${version}, 'draft', ${content.summary}, ${content.response}, ${attachJson}::jsonb)
       RETURNING *
     `;
     return parseRow(row!);

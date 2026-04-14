@@ -17,7 +17,8 @@ const VALID_STATUS_TRANSITIONS: Partial<Record<CaseStatus, CaseStatus[]>> = {
   "Ready for Review": ["Approval Pending", "Ready to Submit", "Submitted"],
   "Approval Pending": ["Ready for Review", "Ready to Submit"],
   "Ready to Submit": ["Submitted", "Ready for Review"],
-  "Submitted": ["Closed"],
+  "Submitted": ["Action Required", "Closed"],
+  "Action Required": ["Hunting Evidence", "Ready for Review"],
   "Closed": [],
 };
 
@@ -92,6 +93,33 @@ export const update = api<UpdateCaseParams, Case>(
     const query = `UPDATE cases SET ${updates.join(", ")} WHERE id = $${idx} RETURNING *`;
     const row = await db.rawQueryRow<Case>(query, ...values);
     if (!row) throw APIError.internal("update failed");
+
+    if (fields.status === "Ready to Submit") {
+      await db.exec`
+        UPDATE drafts
+        SET draft_status = 'ready', updated_at = NOW()
+        WHERE id = (
+          SELECT id FROM drafts
+          WHERE case_id = ${id}
+          ORDER BY version DESC
+          LIMIT 1
+        )
+      `;
+    }
+
+    if (fields.status === "Submitted") {
+      await db.exec`
+        UPDATE drafts
+        SET draft_status = 'submitted', updated_at = NOW()
+        WHERE id = (
+          SELECT id FROM drafts
+          WHERE case_id = ${id}
+          ORDER BY version DESC
+          LIMIT 1
+        )
+      `;
+    }
+
     return row;
   }
 );

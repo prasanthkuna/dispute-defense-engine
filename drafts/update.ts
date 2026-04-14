@@ -2,6 +2,8 @@ import { api, APIError } from "encore.dev/api";
 import db from "../db";
 import type { Draft, UpdateDraftParams } from "./types";
 
+const MAX_SUMMARY_LENGTH = 1000;
+
 function parseRow(row: Draft): Draft {
   return {
     ...row,
@@ -19,6 +21,10 @@ export const updateDraft = api<UpdateDraftParams, Draft>(
     const parsedExisting = parseRow(existing);
     const newSummary = summary_text ?? parsedExisting.summary_text;
     const newResponse = response_text ?? parsedExisting.response_text;
+
+    if (newSummary.length > MAX_SUMMARY_LENGTH) {
+      throw APIError.invalidArgument(`summary_text must be at most ${MAX_SUMMARY_LENGTH} characters`);
+    }
 
     const row = await db.queryRow<Draft>`
       UPDATE drafts SET summary_text = ${newSummary}, response_text = ${newResponse}, updated_at = NOW()

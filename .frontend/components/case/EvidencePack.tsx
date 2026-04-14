@@ -60,6 +60,9 @@ export default function EvidencePack({ evidence }: Props) {
                       <span style={{ fontFamily: MONO, fontSize: 9, color: "#3D4251" }}>
                         {item.evidence_type}
                       </span>
+                      <span style={{ fontFamily: MONO, fontSize: 9, color: "#3B82F6" }}>
+                        {item.purpose}
+                      </span>
                       {item.confidence < 1 && (
                         <span style={{ fontFamily: MONO, fontSize: 9, color: "#F59E0B" }}>
                           {Math.round(item.confidence * 100)}% confidence

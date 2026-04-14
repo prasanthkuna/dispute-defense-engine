@@ -48,6 +48,8 @@ export default function DisputeSummary({ caseData }: Props) {
       <Row label="PHASE" value={formatPhase(caseData.phase)} mono />
       <Row label="NETWORK" value={caseData.network ?? "Unknown"} mono />
       <Row label="EXTERNAL STATUS" value={caseData.external_status ?? "Unknown"} mono />
+      <Row label="LAST WEBHOOK" value={formatDateTime(caseData.last_webhook_at)} mono />
+      <Row label="REWORK REASON" value={caseData.rework_reason ?? "None"} />
       <Row label="RESPOND BY" value={formatDateTime(caseData.respond_by)} mono />
       <Row label="SCENARIO" value={caseData.scenario_type.replace(/_/g, " ")} />
       <Row label="APPROVAL STATE" value={caseData.approval_state} mono />

@@ -69,7 +69,11 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
   const canOperator = role === "Operator" || role === "Admin";
   const canApprover = role === "Approver" || role === "Admin";
   const needsApproval = caseData.approval_state !== "Not Needed";
-  const canSubmit = caseData.approval_state === "Approved" || caseData.approval_state === "Not Needed" || role === "Admin";
+  const isActionRequired = caseData.status === "Action Required";
+  const canSubmit =
+    (caseData.approval_state === "Approved" || caseData.approval_state === "Not Needed" || role === "Admin") &&
+    caseData.status !== "Submitted" &&
+    !isActionRequired;
 
   const doApproval = async (decision: "Approved" | "Rejected" | "Sent Back") => {
     setLoading(decision);
@@ -135,6 +139,30 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
     }
   };
 
+  const handleResumeRework = async () => {
+    setLoading("ResumeRework");
+    try {
+      await backend.cases.update(caseData.id, { status: "Hunting Evidence" });
+      await backend.audit.log({
+        case_id: caseData.id,
+        actor_type: "operator",
+        actor_name: ACTOR_NAMES[role] ?? role,
+        action_type: "action_required_rework_started",
+        details_json: { role, rework_reason: caseData.rework_reason ?? null },
+      });
+      toast({
+        title: "Rework started",
+        description: "Case moved back into evidence hunting so the response can be rebuilt.",
+      });
+      onRefresh();
+    } catch (err) {
+      console.error("Resume rework error:", err);
+      toast({ title: "Rework failed", description: String(err), variant: "destructive" });
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const statusColor = (s: string) => {
     if (s === "Approved") return "#10B981";
     if (s === "Rejected") return "#EF4444";
@@ -166,6 +194,15 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
             {caseData.approval_state}
           </div>
         </div>
+        {caseData.rework_reason && (
+          <>
+            <div style={{ width: 1, height: 36, background: "#2A2D36" }} />
+            <div style={{ minWidth: 220 }}>
+              <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>REWORK REASON</div>
+              <div style={{ fontFamily: MONO, fontSize: 12, color: "#F59E0B", lineHeight: 1.4 }}>{caseData.rework_reason}</div>
+            </div>
+          </>
+        )}
         <div style={{ width: 1, height: 36, background: "#2A2D36" }} />
         <div>
           <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>YOUR DEMO ROLE</div>
@@ -272,18 +309,19 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
             {needsApproval && (
               <Btn
                 onClick={handleMarkReady}
-                disabled={!!loading || caseData.status === "Approval Pending" || caseData.status === "Submitted"}
+                disabled={!!loading || caseData.status === "Approval Pending" || caseData.status === "Submitted" || isActionRequired}
                 color="#3B82F6"
               >
                 <Clock size={14} /> Send for Approval
               </Btn>
             )}
+            {isActionRequired && (
+              <Btn onClick={handleResumeRework} disabled={!!loading} color="#F59E0B">
+                <RotateCcw size={14} /> Resume Evidence Rework
+              </Btn>
+            )}
             {canSubmit && (
-              <Btn
-                onClick={handleSubmit}
-                disabled={!!loading || caseData.status === "Submitted"}
-                color="#6366F1"
-              >
+              <Btn onClick={handleSubmit} disabled={!!loading} color="#6366F1">
                 <Send size={14} /> Mock Submit to Bank
               </Btn>
             )}

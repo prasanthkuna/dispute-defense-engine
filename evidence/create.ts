@@ -19,11 +19,11 @@ export const createEvidence = api<CreateEvidenceItemParams, EvidenceItem>(
     const row = await db.queryRow<EvidenceItem>`
       INSERT INTO evidence_items (
         id, case_id, evidence_type, source_name, title,
-        summary_text, raw_content_json, preview_text, file_url,
+        summary_text, raw_content_json, preview_text, file_url, purpose,
         status, confidence
       ) VALUES (
         ${id}, ${params.case_id}, ${params.evidence_type}, ${params.source_name}, ${params.title},
-        ${params.summary_text}, ${rawJson}::jsonb, ${params.preview_text}, ${params.file_url ?? null},
+        ${params.summary_text}, ${rawJson}::jsonb, ${params.preview_text}, ${params.file_url ?? null}, ${params.purpose ?? "dispute_evidence"},
         ${params.status}, ${params.confidence}
       ) RETURNING *
     `;

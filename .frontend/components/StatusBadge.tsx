@@ -5,6 +5,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   "Approval Pending": { bg: "rgba(245,158,11,0.1)", text: "#F59E0B", border: "rgba(245,158,11,0.3)" },
   "Ready to Submit": { bg: "rgba(139,92,246,0.1)", text: "#8B5CF6", border: "rgba(139,92,246,0.3)" },
   "Submitted": { bg: "rgba(16,185,129,0.15)", text: "#10B981", border: "rgba(16,185,129,0.4)" },
+  "Action Required": { bg: "rgba(239,68,68,0.12)", text: "#EF4444", border: "rgba(239,68,68,0.35)" },
   "Closed": { bg: "#1A1D24", text: "#3D4251", border: "#2A2D36" },
 };
 

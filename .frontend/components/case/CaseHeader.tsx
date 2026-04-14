@@ -69,6 +69,25 @@ export default function CaseHeader({ caseData }: Props) {
           <span>RESPOND BY {formatDateTime(caseData.respond_by)}</span>
           <span>EVENT STATUS {caseData.external_status ?? "Unknown"}</span>
         </div>
+        {caseData.rework_reason && (
+          <div
+            style={{
+              marginTop: 10,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: MONO,
+              fontSize: 11,
+              color: "#F59E0B",
+              background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.22)",
+              borderRadius: 6,
+              padding: "6px 10px",
+            }}
+          >
+            ACTION REQUIRED: {caseData.rework_reason}
+          </div>
+        )}
       </div>
 
       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>

@@ -16,6 +16,8 @@ import {
 } from "./evidence_factory";
 import { getDraftText } from "./draft_templates";
 
+const MAX_SUMMARY_LENGTH = 1000;
+
 function parseStep(row: AgentTraceStep): AgentTraceStep {
   return {
     ...row,
@@ -105,11 +107,11 @@ export const runAgent = api<RunAgentParams, RunAgentResponse>(
       await db.exec`
         INSERT INTO evidence_items (
           id, case_id, evidence_type, source_name, title,
-          summary_text, raw_content_json, preview_text, file_url,
+          summary_text, raw_content_json, preview_text, file_url, purpose,
           status, confidence
         ) VALUES (
           ${evidenceId}, ${item.case_id}, ${item.evidence_type}, ${item.source_name}, ${item.title},
-          ${item.summary_text}, ${rawJson}::jsonb, ${item.preview_text}, ${item.file_url ?? null},
+          ${item.summary_text}, ${rawJson}::jsonb, ${item.preview_text}, ${item.file_url ?? null}, 'dispute_evidence',
           ${item.status}, ${item.confidence}
         )
       `;
@@ -160,11 +162,14 @@ export const runAgent = api<RunAgentParams, RunAgentResponse>(
     `;
     if (caseRow) {
       const draftContent = getDraftText(scenario_type, caseRow.dispute_id, caseRow);
+      if (draftContent.summary.length > MAX_SUMMARY_LENGTH) {
+        throw new Error(`generated summary exceeded ${MAX_SUMMARY_LENGTH} characters`);
+      }
       const draftId = crypto.randomUUID();
       const attachJson = JSON.stringify(draftContent.attachments);
       await db.exec`
-        INSERT INTO drafts (id, case_id, version, summary_text, response_text, attachments_json)
-        VALUES (${draftId}, ${case_id}, 1, ${draftContent.summary}, ${draftContent.response}, ${attachJson}::jsonb)
+        INSERT INTO drafts (id, case_id, version, draft_status, summary_text, response_text, attachments_json)
+        VALUES (${draftId}, ${case_id}, 1, 'draft', ${draftContent.summary}, ${draftContent.response}, ${attachJson}::jsonb)
       `;
     }
 

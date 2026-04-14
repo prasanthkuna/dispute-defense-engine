@@ -3,7 +3,7 @@ import db from "../db";
 import { agent, audit, ingest } from "~encore/clients";
 import { SCENARIOS, type ScenarioDefinition } from "./scenarios";
 import type { Case } from "../cases/types";
-import type { DisputeWebhookPayload } from "../ingest/types";
+import type { DisputeWebhookPayload, RazorpayDisputeEventType } from "../ingest/types";
 
 interface SimulateParams {
   scenario_type: ScenarioType;
@@ -45,9 +45,10 @@ export async function runScenario(scenario_type: ScenarioType): Promise<Simulate
     },
   };
 
+  const eventType: RazorpayDisputeEventType = "payment.dispute.created";
   const ingestResult = await ingest.ingestEvent({
     external_event_id: disputeId,
-    event_type: "dispute.created",
+    event_type: eventType,
     payload,
   });
 

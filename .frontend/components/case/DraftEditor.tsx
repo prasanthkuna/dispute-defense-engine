@@ -5,6 +5,12 @@ import { useToast } from "@/components/ui/use-toast";
 import type { Draft } from "~backend/drafts/types";
 
 const MONO = "'IBM Plex Mono', monospace";
+const MAX_SUMMARY_LENGTH = 1000;
+const DRAFT_STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  draft: { bg: "rgba(59,130,246,0.1)", text: "#3B82F6", border: "rgba(59,130,246,0.25)" },
+  ready: { bg: "rgba(139,92,246,0.1)", text: "#8B5CF6", border: "rgba(139,92,246,0.25)" },
+  submitted: { bg: "rgba(16,185,129,0.12)", text: "#10B981", border: "rgba(16,185,129,0.28)" },
+};
 
 interface Props {
   caseId: string;
@@ -20,6 +26,15 @@ export default function DraftEditor({ drafts, caseId, onRefresh }: Props) {
   const [regenerating, setRegenerating] = useState(false);
 
   const displayText = text ?? draft?.response_text ?? "";
+  const summaryLength = draft?.summary_text.length ?? 0;
+  const summaryColors =
+    summaryLength >= MAX_SUMMARY_LENGTH
+      ? { text: "#EF4444", border: "rgba(239,68,68,0.25)" }
+      : summaryLength >= 900
+        ? { text: "#F59E0B", border: "rgba(245,158,11,0.25)" }
+        : { text: "#6B7280", border: "rgba(61,66,81,0.4)" };
+  const draftStatus = draft?.draft_status ?? "draft";
+  const draftStatusColors = DRAFT_STATUS_COLORS[draftStatus] ?? DRAFT_STATUS_COLORS.draft;
 
   const handleSave = async () => {
     if (!draft) return;
@@ -76,17 +91,31 @@ export default function DraftEditor({ drafts, caseId, onRefresh }: Props) {
             BANK-FACING RESPONSE DRAFT
           </span>
           {draft && (
-            <span style={{
-              fontFamily: MONO,
-              fontSize: 9,
-              color: "#3D4251",
-              background: "#1A1D24",
-              border: "1px solid #2A2D36",
-              borderRadius: 4,
-              padding: "2px 6px",
-            }}>
-              v{draft.version}
-            </span>
+            <>
+              <span style={{
+                fontFamily: MONO,
+                fontSize: 9,
+                color: "#3D4251",
+                background: "#1A1D24",
+                border: "1px solid #2A2D36",
+                borderRadius: 4,
+                padding: "2px 6px",
+              }}>
+                v{draft.version}
+              </span>
+              <span style={{
+                fontFamily: MONO,
+                fontSize: 9,
+                color: draftStatusColors.text,
+                background: draftStatusColors.bg,
+                border: `1px solid ${draftStatusColors.border}`,
+                borderRadius: 4,
+                padding: "2px 6px",
+                textTransform: "uppercase",
+              }}>
+                {draftStatus}
+              </span>
+            </>
           )}
           <div style={{ flex: 1 }} />
           <button
@@ -142,9 +171,26 @@ export default function DraftEditor({ drafts, caseId, onRefresh }: Props) {
             borderBottom: "1px solid rgba(59,130,246,0.1)",
             fontSize: 11,
             color: "#6B7280",
-            fontStyle: "italic",
           }}>
-            {draft.summary_text}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 6 }}>
+              <span style={{ fontStyle: "italic" }}>{draft.summary_text}</span>
+              <span
+                style={{
+                  fontFamily: MONO,
+                  fontSize: 10,
+                  color: summaryColors.text,
+                  border: `1px solid ${summaryColors.border}`,
+                  borderRadius: 4,
+                  padding: "2px 6px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                SUMMARY {summaryLength}/{MAX_SUMMARY_LENGTH}
+              </span>
+            </div>
+            <div style={{ fontFamily: MONO, fontSize: 10, color: "#3D4251" }}>
+              Razorpay contest summaries are capped at 1000 characters.
+            </div>
           </div>
         )}
 

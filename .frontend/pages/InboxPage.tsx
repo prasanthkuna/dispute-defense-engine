@@ -154,6 +154,7 @@ export default function InboxPage() {
           <option value="Approval Pending">Approval Pending</option>
           <option value="Ready to Submit">Ready to Submit</option>
           <option value="Submitted">Submitted</option>
+          <option value="Action Required">Action Required</option>
         </select>
 
         <select value={recFilter} onChange={(e) => setRecFilter(e.target.value)} style={selectStyle}>
