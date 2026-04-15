@@ -23,6 +23,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 const MONO = "'Space Mono', monospace";
 const SYNE = "'Syne', sans-serif";
+const CASE_MONO = "'IBM Plex Mono', monospace";
 
 function MetricCard({
   label,
@@ -51,7 +52,7 @@ function MetricCard({
         <span style={{ fontSize: 11, fontFamily: MONO, color: "#6B7280", letterSpacing: "0.08em" }}>{label}</span>
         <Icon size={16} color={color} />
       </div>
-      <div style={{ fontSize: 28, fontFamily: SYNE, fontWeight: 800, color }}>{value}</div>
+      <div style={{ fontSize: 28, fontFamily: CASE_MONO, fontWeight: 700, color, letterSpacing: "-0.03em" }}>{value}</div>
       <p style={{ margin: "10px 0 0", fontSize: 12, color: "#6B7280", lineHeight: 1.5 }}>{note}</p>
     </div>
   );
@@ -81,6 +82,8 @@ export default function DashboardPage() {
     return `${stats.total_cases} live cases spanning ${formatCurrency(stats.total_disputed_amount)} in dispute value, with ${stats.overdue_count} overdue and ${stats.due_in_24h_count} due within 24 hours.`;
   }, [stats]);
 
+  const hasSeededCases = (stats?.total_cases ?? 0) > 0;
+
   const seedScenarios = async () => {
     setIsSeeding(true);
     try {
@@ -90,6 +93,7 @@ export default function DashboardPage() {
         description: "Four Razorpay-aligned cases are now available in the queue.",
       });
       qc.invalidateQueries({ queryKey: ["cases"] });
+      qc.invalidateQueries({ queryKey: ["cases", "stats"] });
       qc.invalidateQueries({ queryKey: ["ingest", "events"] });
     } catch {
       toast({
@@ -111,6 +115,7 @@ export default function DashboardPage() {
         description: "All demo cases and telemetry were cleared. Seed again to rebuild the queue.",
       });
       qc.invalidateQueries({ queryKey: ["cases"] });
+      qc.invalidateQueries({ queryKey: ["cases", "stats"] });
       qc.invalidateQueries({ queryKey: ["ingest", "events"] });
     } catch {
       toast({
@@ -185,7 +190,7 @@ export default function DashboardPage() {
           <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
             <button
               onClick={seedScenarios}
-              disabled={isSeeding}
+              disabled={isSeeding || hasSeededCases}
               style={{
                 background: "#3B82F6",
                 border: "none",
@@ -198,11 +203,12 @@ export default function DashboardPage() {
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
-                cursor: isSeeding ? "wait" : "pointer",
+                cursor: isSeeding ? "wait" : hasSeededCases ? "not-allowed" : "pointer",
+                opacity: hasSeededCases ? 0.55 : 1,
               }}
             >
               {isSeeding ? <Loader2 size={14} className="animate-spin" /> : <WandSparkles size={14} />}
-              {isSeeding ? "Seeding demo cases..." : "Seed 4 demo disputes"}
+              {isSeeding ? "Seeding demo cases..." : hasSeededCases ? "Demo disputes already seeded" : "Seed 4 demo disputes"}
             </button>
 
             <button
@@ -275,7 +281,7 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ fontFamily: MONO, fontSize: 10, color: "#3B82F6", marginBottom: 4 }}>{event.external_event_id}</div>
                   <div style={{ fontSize: 12, color: "#9CA3AF", lineHeight: 1.5 }}>
-                    {(event.payload_json as any)?.dispute?.merchant_name ?? "Merchant"} · {(event.payload_json as any)?.dispute?.payment_id ?? "Payment pending"}
+                    {(event.payload_json as any)?.dispute?.merchant_name ?? "Merchant"} • {(event.payload_json as any)?.dispute?.payment_id ?? "Payment pending"}
                   </div>
                 </div>
               ))}

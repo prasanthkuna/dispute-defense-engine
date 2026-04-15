@@ -19,7 +19,7 @@ export default function App() {
       <RoleContext.Provider value={roleState}>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
           <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
             *, *::before, *::after { box-sizing: border-box; }
             html, body, #root { height: 100%; margin: 0; padding: 0; }
             body { background: #050505; color: #F1F4F9; font-family: 'Inter', sans-serif; }

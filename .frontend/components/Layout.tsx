@@ -1,13 +1,21 @@
-import { Outlet, NavLink } from "react-router-dom";
-import { Inbox, Zap, Shield, LayoutDashboard } from "lucide-react";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Inbox, Shield, LayoutDashboard } from "lucide-react";
 import RoleSwitcher from "./RoleSwitcher";
 
 const navItems = [
-  { to: "/", label: "Command Center", icon: LayoutDashboard, end: true },
-  { to: "/ledger", label: "Dispute Ledger", icon: Inbox, end: false },
+  { to: "/", label: "Command Center", icon: LayoutDashboard, end: true, matches: (pathname: string) => pathname === "/" },
+  {
+    to: "/ledger",
+    label: "Dispute Ledger",
+    icon: Inbox,
+    end: false,
+    matches: (pathname: string) => pathname.startsWith("/ledger") || pathname.startsWith("/cases/"),
+  },
 ];
 
 export default function Layout() {
+  const location = useLocation();
+
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", position: "relative" }}>
       <div className="scanlines" />
@@ -55,12 +63,15 @@ export default function Layout() {
 
         {/* Nav */}
         <nav style={{ padding: "16px 12px", flex: 1 }}>
-          {navItems.map(({ to, label, icon: Icon, end }) => (
+          {navItems.map(({ to, label, icon: Icon, end, matches }) => {
+            const isActive = matches(location.pathname);
+
+            return (
             <NavLink
               key={to}
               to={to}
               end={end}
-              style={({ isActive }) => ({
+              style={() => ({
                 display: "flex",
                 alignItems: "center",
                 gap: 12,
@@ -80,7 +91,8 @@ export default function Layout() {
               <Icon size={14} />
               {label}
             </NavLink>
-          ))}
+            );
+          })}
         </nav>
 
         {/* Version */}
