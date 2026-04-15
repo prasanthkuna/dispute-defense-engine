@@ -91,7 +91,11 @@ export const ingestEvent = api<IngestEventParams, IngestEventResponse>(
         NOW()
       )
       ON CONFLICT (dispute_id) DO UPDATE SET
+        merchant_name = EXCLUDED.merchant_name,
+        amount = EXCLUDED.amount,
+        currency = EXCLUDED.currency,
         payment_id = EXCLUDED.payment_id,
+        reason_code = EXCLUDED.reason_code,
         status = EXCLUDED.status,
         external_status = EXCLUDED.external_status,
         phase = EXCLUDED.phase,
