@@ -1,9 +1,21 @@
 node_modules/
+**/node_modules/
+
+.vercel/
+.encore/
+encore.gen/
+
+.frontend/dist/
+.frontend/.vercel/
+.frontend/.env.development
+
 backend/
 skills/
-frontend/node_modules/
-frontend/dist/
-frontend/.vercel/
-frontend/.env.development
 
-.vercel
+dist/
+coverage/
+
+**/tsconfig.tsbuildinfo
+*.bak
+Thumbs.db
+.DS_Store

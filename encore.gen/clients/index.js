@@ -1,9 +1,0 @@
-export * as agent from "../internal/clients/agent/endpoints.js";
-export * as approvals from "../internal/clients/approvals/endpoints.js";
-export * as audit from "../internal/clients/audit/endpoints.js";
-export * as cases from "../internal/clients/cases/endpoints.js";
-export * as drafts from "../internal/clients/drafts/endpoints.js";
-export * as evidence from "../internal/clients/evidence/endpoints.js";
-export * as ingest from "../internal/clients/ingest/endpoints.js";
-export * as policy from "../internal/clients/policy/endpoints.js";
-export * as simulation from "../internal/clients/simulation/endpoints.js";

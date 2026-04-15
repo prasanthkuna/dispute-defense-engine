@@ -1,6 +1,9 @@
 .frontend/
+.vercel/
+backend/
 node_modules/
-dist/
 skills/
+
 .encore/
 encore.gen/
+dist/
