@@ -7,6 +7,22 @@ The app is intentionally optimized for demoability:
 - the frontend is a separate Vite app in `.frontend`
 - seeded scenarios let a reviewer explore the full workflow without wiring live webhooks or real merchant systems
 
+## At A Glance
+
+- `4` seeded dispute scenarios covering contest, accept, and manual-review paths
+- `9` backend service areas: ingest, cases, evidence, agent, policy, drafts, approvals, audit, simulation
+- `7` case-detail work surfaces: Overview, Intake, Agent Trace, Evidence, Drafting, Approvals, Audit
+- `3` deterministic decision outcomes: `Contest`, `Accept`, `Escalate`
+- deployed on `2` platforms:
+  - Encore Cloud for backend
+  - Vercel for frontend
+- modeled around Razorpay-style dispute intake, lifecycle, and reviewer operations
+
+## Live Links
+
+- Live app: `https://dispute-defense-engine-ui.vercel.app/`
+- GitHub branch: `https://github.com/prasanthkuna/dispute-defense-engine/tree/feature/hardening-verification`
+
 ## Product Goal
 
 The goal is not to show "LLM magic." The goal is to show what a high-trust dispute operations system could look like for an Indian payments context:
@@ -55,6 +71,24 @@ Most dispute handling tools either stop at a raw queue or bury operational judgm
 - make the system legible enough for operations, risk, and compliance teams
 
 The result is closer to a dispute-ops cockpit than a toy AI demo.
+
+## Reviewer Walkthrough
+
+If you are opening this project for the first time, the fastest path is:
+
+1. Open the live app
+2. Use the dashboard to seed the four demo disputes if the queue is empty
+3. Open the dispute ledger
+4. Pick a case and walk through:
+   - Intake
+   - Agent Trace
+   - Evidence
+   - Drafting
+   - Approvals
+   - Audit
+5. Use the role switcher to inspect operator, approver, and admin actions
+
+The prototype is intentionally designed so a reviewer can understand the whole workflow in a few minutes without any setup.
 
 ## Architecture
 
@@ -170,6 +204,28 @@ The simulation service seeds four curated disputes:
 
 These are designed to show different product behaviors, not just a single happy path.
 
+## What Is Real Today
+
+- typed backend services and API boundaries
+- idempotent dispute ingestion and case creation
+- normalized dispute records with payment, reason, phase, network, and SLA metadata
+- evidence checklist and evidence pack workflow
+- deterministic policy decisioning
+- editable draft workflow
+- approval routing and audit trail
+- queue, dashboard, and case-detail UX
+- branch-based backend and frontend deployment setup
+
+## What Is Simulated Today
+
+- dispute creation via seeded scenarios rather than live merchant traffic
+- evidence tool outputs and cross-system retrieval
+- OCR / translation outcomes
+- draft generation content
+- agent behavior as a bounded scenario-driven workflow rather than a live model-backed tool agent
+
+This is deliberate. The current version optimizes for product clarity, workflow completeness, and reviewer trust rather than pretending to be a fully production-integrated AI system.
+
 ## Demo Mode
 
 This repo intentionally runs in demo mode so reviewers can inspect the full workflow without an auth wall.
@@ -205,6 +261,16 @@ What is deliberately not delegated to AI:
 - policy guardrails
 
 That balance is intentional. The product is designed around "AI-assisted dispute operations with controls," not a fully autonomous black-box agent.
+
+## Potential Operational Value
+
+This is still a prototype, so these are workflow-level benefits rather than production benchmarks.
+
+- consolidates intake, evidence, decisioning, drafting, approvals, and audit into one case workspace
+- reduces reviewer context switching across multiple merchant and support systems
+- surfaces money-at-risk and SLA pressure earlier in the queue
+- makes contest vs accept vs escalate decisions more explainable and reviewable
+- creates a cleaner path to governed AI-assisted operations instead of opaque automation
 
 ## Local Development
 
