@@ -3,9 +3,6 @@ import { CheckCircle, XCircle, RotateCcw, Send, Clock, Shield } from "lucide-rea
 import { useRole } from "../../hooks/useRole";
 import { useToast } from "@/components/ui/use-toast";
 import backend from "~backend/client";
-import type { Case } from "~backend/cases/types";
-import type { Approval } from "~backend/approvals/types";
-import type { Draft } from "~backend/drafts/types";
 
 const MONO = "'IBM Plex Mono', monospace";
 
@@ -68,12 +65,29 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
   const draft = drafts[0] ?? null;
   const canOperator = role === "Operator" || role === "Admin";
   const canApprover = role === "Approver" || role === "Admin";
-  const needsApproval = caseData.approval_state !== "Not Needed";
+  const isAcceptCase = caseData.recommendation === "Accept";
+  const isContestCase = caseData.recommendation === "Contest";
+  const needsApproval = isAcceptCase || caseData.approval_state !== "Not Needed";
   const isActionRequired = caseData.status === "Action Required";
+  const submitEnabledByApproval =
+    role === "Admin" ||
+    caseData.approval_state === "Approved" ||
+    (!isAcceptCase && caseData.approval_state === "Not Needed");
   const canSubmit =
-    (caseData.approval_state === "Approved" || caseData.approval_state === "Not Needed" || role === "Admin") &&
+    submitEnabledByApproval &&
     caseData.status !== "Submitted" &&
     !isActionRequired;
+  const approvalSubject = isAcceptCase ? "Acceptance" : isContestCase ? "Contest Submission" : "Escalation Review";
+  const submitLabel = isAcceptCase ? "Mock Confirm Acceptance" : isContestCase ? "Mock Submit Contest" : "Mock Submit Response";
+  const submitToastTitle = isAcceptCase ? "Acceptance confirmed" : isContestCase ? "Contest submitted" : "Case submitted";
+  const submitToastDescription = isAcceptCase
+    ? "Mock acceptance recorded. This path is treated as an irreversible loss acknowledgement."
+    : isContestCase
+      ? "Mock contest packet sent for bank review."
+      : "Mock dispute response sent to the bank.";
+  const approvalPrompt = isAcceptCase
+    ? "Acceptance is irreversible. This confirms the dispute as lost in the mocked workflow. Continue?"
+    : "Submit the current response packet in the mocked workflow?";
 
   const doApproval = async (decision: "Approved" | "Rejected" | "Sent Back") => {
     setLoading(decision);
@@ -86,7 +100,10 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         decision,
         notes: notes || undefined,
       });
-      toast({ title: `Decision: ${decision}`, description: "Approval recorded and case updated." });
+      toast({
+        title: `${approvalSubject}: ${decision}`,
+        description: "Approval recorded and case updated.",
+      });
       setNotes("");
       onRefresh();
     } catch (err) {
@@ -106,9 +123,9 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         actor_type: "operator",
         actor_name: ACTOR_NAMES[role] ?? role,
         action_type: "sent_for_approval",
-        details_json: { role, note: "Marked ready and sent for approval" },
+        details_json: { role, note: `Marked ready and sent for approval: ${approvalSubject}` },
       });
-      toast({ title: "Sent for approval", description: "Case is now pending approval." });
+      toast({ title: "Sent for approval", description: `${approvalSubject} is now pending approval.` });
       onRefresh();
     } catch (err) {
       console.error("Mark ready error:", err);
@@ -119,6 +136,10 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
   };
 
   const handleSubmit = async () => {
+    if (isAcceptCase && !window.confirm(approvalPrompt)) {
+      return;
+    }
+
     setLoading("Submit");
     try {
       await backend.cases.update(caseData.id, { status: "Submitted" });
@@ -126,10 +147,15 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         case_id: caseData.id,
         actor_type: "operator",
         actor_name: ACTOR_NAMES[role] ?? role,
-        action_type: "case_submitted",
-        details_json: { role, submitted_at: new Date().toISOString() },
+        action_type: isAcceptCase ? "acceptance_confirmed" : isContestCase ? "contest_submitted" : "case_submitted",
+        details_json: {
+          role,
+          submitted_at: new Date().toISOString(),
+          recommendation: caseData.recommendation,
+          irreversible: isAcceptCase,
+        },
       });
-      toast({ title: "Case submitted", description: "Dispute response sent to bank." });
+      toast({ title: submitToastTitle, description: submitToastDescription });
       onRefresh();
     } catch (err) {
       console.error("Submit error:", err);
@@ -173,6 +199,27 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
+      {isAcceptCase && (
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(239,68,68,0.08))",
+            border: "1px solid rgba(245,158,11,0.24)",
+            borderRadius: 10,
+            padding: 18,
+            display: "grid",
+            gap: 6,
+          }}
+        >
+          <div style={{ fontFamily: MONO, fontSize: 10, color: "#F59E0B", letterSpacing: "0.12em", fontWeight: 700 }}>
+            IRREVERSIBLE ACCEPTANCE CONTROL
+          </div>
+          <div style={{ color: "#FDE7BA", fontSize: 12, lineHeight: 1.6 }}>
+            This path should stay review-first. Acceptance acknowledges the dispute as lost, so the app now keeps it
+            approval-gated and asks for an explicit final confirmation before recording the mocked action.
+          </div>
+        </div>
+      )}
+
       <div style={{
         background: "#111318",
         border: "1px solid #2A2D36",
@@ -192,6 +239,13 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
           <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>APPROVAL STATE</div>
           <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: statusColor(caseData.approval_state) }}>
             {caseData.approval_state}
+          </div>
+        </div>
+        <div style={{ width: 1, height: 36, background: "#2A2D36" }} />
+        <div style={{ minWidth: 180 }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>ACTION PATH</div>
+          <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: isAcceptCase ? "#F59E0B" : "#8B5CF6" }}>
+            {approvalSubject.toUpperCase()}
           </div>
         </div>
         {caseData.rework_reason && (
@@ -261,7 +315,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <Shield size={14} color="#3B82F6" />
-            <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280" }}>APPROVER CONTROLS</div>
+            <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280" }}>APPROVER CONTROLS - {approvalSubject.toUpperCase()}</div>
           </div>
           <textarea
             value={notes}
@@ -285,13 +339,13 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
           />
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
             <Btn onClick={() => doApproval("Approved")} disabled={!!loading} color="#10B981">
-              <CheckCircle size={14} /> Approve
+              <CheckCircle size={14} /> {isAcceptCase ? "Approve Acceptance" : isContestCase ? "Approve Contest" : "Approve Review"}
             </Btn>
             <Btn onClick={() => doApproval("Rejected")} disabled={!!loading} color="#EF4444">
-              <XCircle size={14} /> Reject
+              <XCircle size={14} /> {isAcceptCase ? "Reject Acceptance" : isContestCase ? "Reject Contest" : "Reject Review"}
             </Btn>
             <Btn onClick={() => doApproval("Sent Back")} disabled={!!loading} color="#F59E0B">
-              <RotateCcw size={14} /> Send Back
+              <RotateCcw size={14} /> Send Back for Rework
             </Btn>
           </div>
         </div>
@@ -304,7 +358,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
           borderRadius: 10,
           padding: 20,
         }}>
-          <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", marginBottom: 16 }}>OPERATOR CONTROLS</div>
+          <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", marginBottom: 16 }}>OPERATOR CONTROLS - {approvalSubject.toUpperCase()}</div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
             {needsApproval && (
               <Btn
@@ -312,7 +366,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
                 disabled={!!loading || caseData.status === "Approval Pending" || caseData.status === "Submitted" || isActionRequired}
                 color="#3B82F6"
               >
-                <Clock size={14} /> Send for Approval
+                <Clock size={14} /> Send {approvalSubject} for Approval
               </Btn>
             )}
             {isActionRequired && (
@@ -322,7 +376,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
             )}
             {canSubmit && (
               <Btn onClick={handleSubmit} disabled={!!loading} color="#6366F1">
-                <Send size={14} /> Mock Submit to Bank
+                <Send size={14} /> {submitLabel}
               </Btn>
             )}
           </div>

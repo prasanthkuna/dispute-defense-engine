@@ -26,6 +26,7 @@ function Metric({ label, value, color, sublabel }: { label: string; value: strin
 
 export default function CaseHeader({ caseData }: Props) {
   const sla = getSlaState(caseData.respond_by);
+  const isAcceptCase = caseData.recommendation === "Accept";
 
   return (
     <div
@@ -86,6 +87,25 @@ export default function CaseHeader({ caseData }: Props) {
             }}
           >
             ACTION REQUIRED: {caseData.rework_reason}
+          </div>
+        )}
+        {isAcceptCase && (
+          <div
+            style={{
+              marginTop: 10,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: MONO,
+              fontSize: 11,
+              color: "#FDE7BA",
+              background: "linear-gradient(135deg, rgba(245,158,11,0.14), rgba(239,68,68,0.08))",
+              border: "1px solid rgba(245,158,11,0.28)",
+              borderRadius: 6,
+              padding: "6px 10px",
+            }}
+          >
+            ACCEPTANCE IS IRREVERSIBLE. APPROVER CONFIRMATION SHOULD BE REQUIRED BEFORE FINALIZING.
           </div>
         )}
       </div>

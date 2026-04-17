@@ -35,8 +35,9 @@ export const evaluate = api<PolicyInput, PolicyDecision>(
         recommended_action = "Accept";
         confidence_band = "High";
         rationale.push("SIGNAL: RTO (Return to Origin) sequence detected in logistics stream.");
-        rationale.push("STRATEGY: Automated Recovery Compliance. No contest warranted.");
-        approval_required = false;
+        rationale.push("STRATEGY: Non-delivery is confirmed by the carrier, so contesting would be weak.");
+        rationale.push("CONTROL: Acceptance remains irreversible and requires explicit approver confirmation.");
+        approval_required = true;
       } else {
         recommended_action = "Escalate";
         confidence_band = "Low";

@@ -16,6 +16,9 @@ interface Props {
 }
 
 export default function PolicyDecisionCard({ decision, large }: Props) {
+  const isAcceptDecision = decision?.recommended_action === "Accept";
+  const approvalRequired = isAcceptDecision || Boolean(decision?.approval_required);
+
   return (
     <div style={{
       background: "#111318",
@@ -65,16 +68,41 @@ export default function PolicyDecisionCard({ decision, large }: Props) {
               <span style={{
                 fontFamily: MONO,
                 fontSize: 10,
-                color: decision.approval_required ? "#F59E0B" : "#10B981",
-                background: decision.approval_required ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)",
-                border: `1px solid ${decision.approval_required ? "rgba(245,158,11,0.25)" : "rgba(16,185,129,0.25)"}`,
+                color: approvalRequired ? "#F59E0B" : "#10B981",
+                background: approvalRequired ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)",
+                border: `1px solid ${approvalRequired ? "rgba(245,158,11,0.25)" : "rgba(16,185,129,0.25)"}`,
                 borderRadius: 4,
                 padding: "3px 8px",
               }}>
-                {decision.approval_required ? "APPROVAL REQUIRED" : "AUTO-APPROVED"}
+                {approvalRequired ? "APPROVER REVIEW REQUIRED" : "NO SECONDARY APPROVAL REQUIRED"}
               </span>
             </div>
           </div>
+
+          {isAcceptDecision && (
+            <div
+              style={{
+                marginBottom: 16,
+                display: "grid",
+                gap: 6,
+                background: "linear-gradient(135deg, rgba(245,158,11,0.14), rgba(239,68,68,0.08))",
+                border: "1px solid rgba(245,158,11,0.3)",
+                borderRadius: 8,
+                padding: "12px 14px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <AlertTriangle size={12} color="#F59E0B" />
+                <span style={{ fontFamily: MONO, fontSize: 10, color: "#F59E0B", fontWeight: 700, letterSpacing: "0.08em" }}>
+                  IRREVERSIBLE ACCEPTANCE PATH
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "#FDE7BA", lineHeight: 1.55 }}>
+                Accepting a dispute acknowledges the case as lost. Keep this path approval-gated and confirm it only when
+                carrier evidence clearly rules out a defensible contest.
+              </div>
+            </div>
+          )}
 
           {/* Rationale */}
           {(decision.rationale_json as string[]).length > 0 && (
