@@ -1,13 +1,11 @@
-import { Shield, CheckCircle, AlertTriangle, XCircle, Info } from "lucide-react";
+import { Shield, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import RecommendationBadge from "../RecommendationBadge";
 import type { PolicyDecision } from "~backend/policy/types";
 
-const MONO = "'IBM Plex Mono', monospace";
-
 const CONFIDENCE_COLORS: Record<string, string> = {
-  High: "#10B981",
-  Medium: "#F59E0B",
-  Low: "#EF4444",
+  High: "var(--signal-green)",
+  Medium: "var(--hazard-orange)",
+  Low: "var(--destructive)",
 };
 
 interface Props {
@@ -20,101 +18,77 @@ export default function PolicyDecisionCard({ decision, large }: Props) {
   const approvalRequired = isAcceptDecision || Boolean(decision?.approval_required);
 
   return (
-    <div style={{
-      background: "#111318",
-      border: "1px solid #2A2D36",
-      borderRadius: 10,
-      padding: large ? 28 : 20,
-      height: "100%",
-    }}>
+    <div className={`bg-card border border-border rounded-lg p-6 h-full flex flex-col shadow-sm ${large ? "p-8" : "p-6"}`}>
       {/* Engine label */}
-      <div style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        background: "rgba(59,130,246,0.08)",
-        border: "1px solid rgba(59,130,246,0.2)",
-        borderRadius: 6,
-        padding: "4px 10px",
-        marginBottom: 16,
-      }}>
-        <Shield size={11} color="#3B82F6" />
-        <span style={{ fontFamily: MONO, fontSize: 9, color: "#3B82F6", letterSpacing: "0.12em", fontWeight: 700 }}>
-          DETERMINISTIC POLICY ENGINE - NOT LLM
+      <div className="inline-flex items-center gap-2.5 bg-primary/10 border border-primary/20 rounded-md px-3 py-1.5 mb-6 w-fit">
+        <Shield size={12} className="text-primary" />
+        <span className="font-mono text-[9px] text-primary font-bold tracking-widest uppercase">
+          DETERMINISTIC POLICY ENGINE
         </span>
       </div>
 
       {!decision ? (
-        <div style={{ padding: 20, textAlign: "center", fontFamily: MONO, color: "#3D4251", fontSize: 12 }}>
-          No policy decision yet. Run the agent to generate a decision.
+        <div className="flex-1 flex flex-col items-center justify-center p-8 border border-dashed border-border rounded-lg text-center">
+          <Loader2 size={24} className="text-muted-foreground/30 mb-3" />
+          <div className="text-muted-foreground font-mono text-[11px] uppercase tracking-widest">
+            No policy decision available.
+          </div>
         </div>
       ) : (
-        <>
+        <div className="flex flex-col gap-6">
           {/* Decision */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <RecommendationBadge recommendation={decision.recommended_action} size="lg" />
+          <div className="flex items-center gap-5">
+            <RecommendationBadge recommendation={decision.recommended_action} size="md" />
+            
+            <div className="h-8 w-px bg-border/50" />
+            
             <div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 2 }}>CONFIDENCE</div>
-              <div style={{
-                fontFamily: MONO,
-                fontSize: 14,
-                fontWeight: 700,
-                color: CONFIDENCE_COLORS[decision.confidence_band] ?? "#6B7280",
-              }}>
+              <div className="font-mono text-[9px] text-muted-foreground uppercase tracking-widest mb-1">CONFIDENCE</div>
+              <div 
+                className="font-display text-lg font-bold tracking-tight uppercase"
+                style={{ color: CONFIDENCE_COLORS[decision.confidence_band] ?? "var(--muted-foreground)" }}
+              >
                 {decision.confidence_band}
               </div>
             </div>
-            <div style={{ marginLeft: "auto" }}>
-              <span style={{
-                fontFamily: MONO,
-                fontSize: 10,
-                color: approvalRequired ? "#F59E0B" : "#10B981",
-                background: approvalRequired ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)",
-                border: `1px solid ${approvalRequired ? "rgba(245,158,11,0.25)" : "rgba(16,185,129,0.25)"}`,
-                borderRadius: 4,
-                padding: "3px 8px",
-              }}>
-                {approvalRequired ? "APPROVER REVIEW REQUIRED" : "NO SECONDARY APPROVAL REQUIRED"}
+
+            <div className="ml-auto">
+              <span className={`
+                font-mono text-[10px] font-bold px-2.5 py-1 rounded border uppercase tracking-tight
+                ${approvalRequired 
+                  ? "bg-hazard-orange/10 text-hazard-orange border-hazard-orange/20" 
+                  : "bg-signal-green/10 text-signal-green border-signal-green/20"}
+              `}>
+                {approvalRequired ? "APPROVAL REQUIRED" : "AUTO-APPROVED"}
               </span>
             </div>
           </div>
 
           {isAcceptDecision && (
-            <div
-              style={{
-                marginBottom: 16,
-                display: "grid",
-                gap: 6,
-                background: "linear-gradient(135deg, rgba(245,158,11,0.14), rgba(239,68,68,0.08))",
-                border: "1px solid rgba(245,158,11,0.3)",
-                borderRadius: 8,
-                padding: "12px 14px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <AlertTriangle size={12} color="#F59E0B" />
-                <span style={{ fontFamily: MONO, fontSize: 10, color: "#F59E0B", fontWeight: 700, letterSpacing: "0.08em" }}>
-                  IRREVERSIBLE ACCEPTANCE PATH
+            <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4 flex flex-col gap-2 shadow-inner">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={14} className="text-destructive" />
+                <span className="font-mono text-[11px] font-bold text-destructive uppercase tracking-widest">
+                  IRREVERSIBLE PATH
                 </span>
               </div>
-              <div style={{ fontSize: 12, color: "#FDE7BA", lineHeight: 1.55 }}>
-                Accepting a dispute acknowledges the case as lost. Keep this path approval-gated and confirm it only when
-                carrier evidence clearly rules out a defensible contest.
-              </div>
+              <p className="m-0 text-[12px] text-foreground/80 leading-relaxed font-medium italic">
+                "Accepting a dispute is a final action. This should only be chosen when carrier evidence clearly rules out defense."
+              </p>
             </div>
           )}
 
           {/* Rationale */}
           {(decision.rationale_json as string[]).length > 0 && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 8, letterSpacing: "0.08em" }}>
+            <div>
+              <div className="font-mono text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-3">
                 RATIONALE
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div className="space-y-2.5">
                 {(decision.rationale_json as string[]).map((r, i) => (
-                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <CheckCircle size={11} color="#10B981" style={{ marginTop: 2, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: "#E8EAF0", lineHeight: 1.5 }}>{r}</span>
+                  <div key={i} className="flex gap-3 items-start group">
+                    <CheckCircle size={14} className="text-signal-green shrink-0 mt-0.5 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    <span className="text-[13px] text-foreground/90 leading-relaxed font-medium">{r}</span>
                   </div>
                 ))}
               </div>
@@ -123,25 +97,22 @@ export default function PolicyDecisionCard({ decision, large }: Props) {
 
           {/* Missing items */}
           {(decision.missing_items_json as string[]).length > 0 && (
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: "#F59E0B", marginBottom: 8, letterSpacing: "0.08em" }}>
+            <div className="pt-4 border-t border-border/50">
+              <div className="font-mono text-[10px] text-hazard-orange font-bold tracking-widest uppercase mb-3 flex items-center gap-2">
+                <AlertTriangle size={12} />
                 MISSING EVIDENCE
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <div className="flex flex-wrap gap-2">
                 {(decision.missing_items_json as string[]).map((m, i) => (
-                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <AlertTriangle size={10} color="#F59E0B" style={{ flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, fontFamily: MONO, color: "#F59E0B" }}>
-                      {m.replace(/_/g, " ")}
-                    </span>
-                  </div>
+                  <span key={i} className="bg-hazard-orange/10 text-hazard-orange font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-hazard-orange/20 uppercase tracking-tighter">
+                    {m.replace(/_/g, " ")}
+                  </span>
                 ))}
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
 }
-

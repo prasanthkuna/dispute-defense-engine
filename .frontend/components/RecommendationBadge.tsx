@@ -1,11 +1,3 @@
-const REC_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Contest: { bg: "rgba(59,130,246,0.12)", text: "#3B82F6", border: "rgba(59,130,246,0.35)" },
-  Accept: { bg: "rgba(245,158,11,0.12)", text: "#F59E0B", border: "rgba(245,158,11,0.35)" },
-  Escalate: { bg: "rgba(239,68,68,0.12)", text: "#EF4444", border: "rgba(239,68,68,0.35)" },
-};
-
-const DEFAULT = { bg: "#1A1D24", text: "#6B7280", border: "#2A2D36" };
-
 interface Props {
   recommendation: string | null;
   size?: "sm" | "md" | "lg";
@@ -14,42 +6,43 @@ interface Props {
 export default function RecommendationBadge({ recommendation, size = "sm" }: Props) {
   if (!recommendation) {
     return (
-      <span
-        style={{
-          background: "#1A1D24",
-          color: "#3D4251",
-          border: "1px solid #2A2D36",
-          borderRadius: 4,
-          fontSize: 10,
-          fontWeight: 600,
-          padding: "2px 7px",
-          fontFamily: "'IBM Plex Mono', monospace",
-        }}
-      >
+      <span className="bg-secondary text-muted-foreground/40 border border-border/50 rounded-md px-2 py-0.5 text-[10px] font-mono font-bold tracking-widest uppercase">
         N/A
       </span>
     );
   }
 
-  const colors = REC_COLORS[recommendation] ?? DEFAULT;
-  const fontSize = size === "lg" ? 18 : size === "md" ? 13 : 10;
-  const padding = size === "lg" ? "6px 16px" : size === "md" ? "4px 12px" : "2px 7px";
+  const getColors = (rec: string) => {
+    switch (rec) {
+      case "Contest":
+        return "bg-primary/10 text-primary border-primary/20";
+      case "Accept":
+        return "bg-hazard-orange/10 text-hazard-orange border-hazard-orange/20";
+      case "Escalate":
+        return "bg-destructive/10 text-destructive border-destructive/20";
+      default:
+        return "bg-secondary text-muted-foreground border-border";
+    }
+  };
+
+  const getSizeClasses = (size: string) => {
+    switch (size) {
+      case "lg":
+        return "text-[18px] px-4 py-1.5";
+      case "md":
+        return "text-[13px] px-3 py-1";
+      default:
+        return "text-[10px] px-2 py-0.5";
+    }
+  };
 
   return (
-    <span
-      style={{
-        background: colors.bg,
-        color: colors.text,
-        border: `1px solid ${colors.border}`,
-        borderRadius: 6,
-        fontSize,
-        fontWeight: 700,
-        padding,
-        fontFamily: "'IBM Plex Mono', monospace",
-        letterSpacing: "0.04em",
-      }}
-    >
-      {recommendation.toUpperCase()}
+    <span className={`
+      border rounded-md font-mono font-bold tracking-widest uppercase transition-colors
+      ${getSizeClasses(size)}
+      ${getColors(recommendation)}
+    `}>
+      {recommendation}
     </span>
   );
 }

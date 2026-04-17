@@ -19,13 +19,18 @@ export default function App() {
       <RoleContext.Provider value={roleState}>
         <BrowserRouter basename={import.meta.env.BASE_URL}>
           <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
             *, *::before, *::after { box-sizing: border-box; }
             html, body, #root { height: 100%; margin: 0; padding: 0; }
-            body { background: #050505; color: #F1F4F9; font-family: 'Inter', sans-serif; }
+            body { 
+              background: var(--background); 
+              color: var(--foreground); 
+              font-family: var(--font-body);
+              -webkit-font-smoothing: antialiased;
+              -moz-osx-font-smoothing: grayscale;
+            }
             ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: #08090C; }
-            ::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 2px; }
+            ::-webkit-scrollbar-track { background: var(--secondary); }
+            ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
           `}</style>
           <Routes>
             <Route path="/" element={<Layout />}>

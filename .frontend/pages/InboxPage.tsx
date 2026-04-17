@@ -1,49 +1,40 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, RefreshCw, TrendingUp, Clock3, ShieldAlert, Landmark, Scale, AlertTriangle } from "lucide-react";
+import { Search, RefreshCw, TrendingUp, Clock3, ShieldAlert, Landmark, Scale, AlertTriangle, Filter } from "lucide-react";
 import { useCases, useCaseStats } from "../hooks/useCases";
 import StatusBadge from "../components/StatusBadge";
 import RecommendationBadge from "../components/RecommendationBadge";
 import { formatCurrency, formatDateTime, formatPhase, formatReasonCode, getSlaState } from "../lib/disputes";
 
-const MONO = "'IBM Plex Mono', monospace";
-
 function StatCard({
   label,
   value,
   icon: Icon,
-  color,
+  colorClass,
   note,
 }: {
   label: string;
   value: string | number;
   icon: any;
-  color: string;
+  colorClass: string;
   note?: string;
 }) {
   return (
-    <div
-      style={{
-        background: "#111318",
-        border: "1px solid #2A2D36",
-        borderRadius: 10,
-        padding: "16px 20px",
-        flex: 1,
-        minWidth: 160,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-        <span style={{ fontSize: 11, color: "#6B7280", fontFamily: MONO }}>{label}</span>
-        <Icon size={14} color={color} />
+    <div className="bg-card border border-border rounded-lg p-5 flex-1 min-w-[200px] flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:border-primary/30 group">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[10px] text-muted-foreground font-mono uppercase font-bold tracking-widest">{label}</span>
+        <div className={`p-1.5 rounded-md bg-secondary/50 group-hover:bg-primary/10 transition-colors`}>
+          <Icon size={14} className={colorClass} />
+        </div>
       </div>
-      <div style={{ fontSize: 24, fontWeight: 700, color, fontFamily: MONO }}>{value}</div>
-      {note ? <div style={{ fontFamily: MONO, fontSize: 10, color: "#3D4251", marginTop: 6 }}>{note}</div> : null}
+      <div className={`text-2xl font-display font-bold ${colorClass}`}>{value}</div>
+      {note ? <div className="font-mono text-[9px] text-muted-foreground/40 mt-2 uppercase font-bold tracking-widest">{note}</div> : null}
     </div>
   );
 }
 
 const REASON_OPTIONS = [
-  { value: "", label: "All Reasons" },
+  { value: "", label: "All Reason Codes" },
   { value: "products_not_received", label: "Products Not Received" },
 ];
 
@@ -55,8 +46,8 @@ const PHASE_OPTIONS = [
 ];
 
 const SLA_OPTIONS = [
-  { value: "", label: "All SLA" },
-  { value: "due_24h", label: "Due <24h" },
+  { value: "", label: "All SLA Urgency" },
+  { value: "due_24h", label: "Due < 24h" },
   { value: "overdue", label: "Overdue" },
 ];
 
@@ -90,221 +81,148 @@ export default function InboxPage() {
     );
   });
 
-  const selectStyle = {
-    background: "#111318",
-    border: "1px solid #2A2D36",
-    borderRadius: 6,
-    color: "#E8EAF0",
-    fontSize: 12,
-    padding: "7px 10px",
-    fontFamily: MONO,
-    cursor: "pointer",
-  };
+  const selectClassName = "bg-secondary/30 border border-border/50 rounded-lg text-foreground text-[12px] px-3 py-2.5 font-mono font-bold uppercase tracking-tight outline-none focus:border-primary/50 transition-all cursor-pointer hover:bg-secondary/50";
 
   return (
-    <div style={{ padding: 24, maxWidth: 1500 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#E8EAF0", fontFamily: MONO }}>Dispute Queue</h1>
-        <p style={{ margin: "4px 0 0", fontSize: 13, color: "#6B7280" }}>
-          Razorpay-aligned dispute operations queue sorted by SLA urgency and reviewer-ready decisioning.
-        </p>
-      </div>
-
-      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-        <StatCard label="OPEN CASES" value={stats?.total_cases ?? 0} icon={TrendingUp} color="#3B82F6" />
-        <StatCard label="DISPUTED VALUE" value={formatCurrency(stats?.total_disputed_amount ?? 0)} icon={Landmark} color="#10B981" />
-        <StatCard label="CONTESTABLE VALUE" value={formatCurrency(stats?.contestable_amount ?? 0)} icon={Scale} color="#3B82F6" />
-        <StatCard label="REFUND EXPOSURE" value={formatCurrency(stats?.acceptance_amount ?? 0)} icon={ShieldAlert} color="#F59E0B" />
-        <StatCard label="MANUAL REVIEW VALUE" value={formatCurrency(stats?.escalated_amount ?? 0)} icon={AlertTriangle} color="#EF4444" />
-        <StatCard
-          label="SLA PRESSURE"
-          value={`${stats?.due_in_24h_count ?? 0} / ${stats?.overdue_count ?? 0}`}
-          icon={Clock3}
-          color="#F59E0B"
-          note="Due <24h / Overdue"
-        />
-      </div>
-
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
-          <Search size={14} color="#6B7280" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by dispute id, payment id, merchant, or case id..."
-            style={{
-              width: "100%",
-              background: "#111318",
-              border: "1px solid #2A2D36",
-              borderRadius: 6,
-              color: "#E8EAF0",
-              fontSize: 13,
-              padding: "8px 10px 8px 30px",
-              fontFamily: "Inter, sans-serif",
-              outline: "none",
-            }}
-          />
+    <div className="p-8 max-w-[1500px] mx-auto animate-stagger">
+      <div className="mb-10 flex items-end justify-between gap-6 border-b border-border/50 pb-8">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Landmark size={14} className="text-primary" />
+            <span className="font-mono text-[10px] text-primary font-bold uppercase tracking-[0.2em]">Operational Ledger</span>
+          </div>
+          <h1 className="m-0 text-4xl font-display font-bold text-foreground tracking-tight">Active Disputes</h1>
+          <p className="mt-3 text-[15px] text-muted-foreground max-w-2xl leading-relaxed font-medium">
+            Centralized queue of Razorpay-ingested disputes, optimized for high-velocity evidence hunting and bank-ready response drafting.
+          </p>
         </div>
-
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={selectStyle}>
-          <option value="">All Workflow</option>
-          <option value="New">New</option>
-          <option value="Hunting Evidence">Hunting Evidence</option>
-          <option value="Ready for Review">Ready for Review</option>
-          <option value="Approval Pending">Approval Pending</option>
-          <option value="Ready to Submit">Ready to Submit</option>
-          <option value="Submitted">Submitted</option>
-          <option value="Action Required">Action Required</option>
-        </select>
-
-        <select value={recFilter} onChange={(e) => setRecFilter(e.target.value)} style={selectStyle}>
-          <option value="">All Decisions</option>
-          <option value="Contest">Contest</option>
-          <option value="Accept">Accept</option>
-          <option value="Escalate">Escalate</option>
-        </select>
-
-        <select value={reasonFilter} onChange={(e) => setReasonFilter(e.target.value)} style={selectStyle}>
-          {REASON_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <select value={phaseFilter} onChange={(e) => setPhaseFilter(e.target.value)} style={selectStyle}>
-          {PHASE_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <select value={slaFilter} onChange={(e) => setSlaFilter(e.target.value)} style={selectStyle}>
-          {SLA_OPTIONS.map((option) => (
-            <option key={option.value || "all"} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <button
-          onClick={() => refetch()}
-          style={{
-            background: "transparent",
-            border: "1px solid #2A2D36",
-            borderRadius: 6,
-            color: "#6B7280",
-            padding: "7px 12px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 12,
-          }}
-        >
-          <RefreshCw size={13} />
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => refetch()}
+            className="bg-secondary/50 border border-border rounded-lg text-muted-foreground p-3 hover:text-primary transition-all cursor-pointer shadow-sm active:scale-95"
+          >
+            <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+          </button>
+        </div>
       </div>
 
-      <div
-        style={{
-          background: "#111318",
-          border: "1px solid #2A2D36",
-          borderRadius: 10,
-          overflow: "hidden",
-        }}
-      >
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+      <div className="flex gap-4 mb-10 flex-wrap">
+        <StatCard label="OPEN DISPUTES" value={stats?.total_cases ?? 0} icon={TrendingUp} colorClass="text-foreground" />
+        <StatCard label="QUEUE VALUE" value={formatCurrency(stats?.total_disputed_amount ?? 0)} icon={Landmark} colorClass="text-signal-green" />
+        <StatCard label="STRATEGY: CONTEST" value={formatCurrency(stats?.contestable_amount ?? 0)} icon={Scale} colorClass="text-primary" />
+        <StatCard label="STRATEGY: ACCEPT" value={formatCurrency(stats?.acceptance_amount ?? 0)} icon={ShieldAlert} colorClass="text-hazard-orange" />
+        <StatCard label="URGENT SLA" value={`${stats?.due_in_24h_count ?? 0} / ${stats?.overdue_count ?? 0}`} icon={Clock3} colorClass="text-destructive" note="Due 24h / Overdue" />
+      </div>
+
+      <div className="bg-card/50 border border-border rounded-xl p-6 mb-8 shadow-sm">
+        <div className="flex gap-3 items-center flex-wrap">
+          <div className="relative flex-1 min-w-[340px]">
+            <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/40" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by ID, Payment, or Merchant..."
+              className="w-full bg-background/50 border border-border rounded-lg text-foreground text-[14px] py-3 pl-12 pr-4 outline-none focus:ring-1 focus:ring-primary/20 transition-all font-medium placeholder:text-muted-foreground/20"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 px-3 border-l border-border/50 ml-2">
+            <Filter size={14} className="text-muted-foreground/30" />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectClassName}>
+              <option value="">Workflow</option>
+              <option value="New">New</option>
+              <option value="Hunting Evidence">Evidence Hunting</option>
+              <option value="Ready for Review">Awaiting Review</option>
+              <option value="Approval Pending">Approval Gated</option>
+              <option value="Ready to Submit">Ready to Submit</option>
+              <option value="Submitted">Submitted</option>
+              <option value="Action Required">Action Required</option>
+            </select>
+
+            <select value={recFilter} onChange={(e) => setRecFilter(e.target.value)} className={selectClassName}>
+              <option value="">Decision</option>
+              <option value="Contest">Contest</option>
+              <option value="Accept">Accept</option>
+              <option value="Escalate">Escalate</option>
+            </select>
+
+            <select value={slaFilter} onChange={(e) => setSlaFilter(e.target.value)} className={selectClassName}>
+              {SLA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-2xl">
+        <table className="w-full border-collapse text-[13px]">
           <thead>
-            <tr style={{ borderBottom: "1px solid #2A2D36" }}>
-              {["Dispute", "Payment", "Merchant", "Reason", "Phase", "Respond By", "Amount", "Decision", "Workflow"].map((heading) => (
-                <th
-                  key={heading}
-                  style={{
-                    padding: "10px 14px",
-                    textAlign: "left",
-                    color: "#3D4251",
-                    fontFamily: MONO,
-                    fontWeight: 600,
-                    fontSize: 10,
-                    letterSpacing: "0.08em",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {heading.toUpperCase()}
+            <tr className="bg-secondary/30 border-b border-border">
+              {["Object Identifier", "Merchant Details", "Protocol Context", "Deadline", "Exposure", "Engine Strategy", "Workflow State"].map((h) => (
+                <th key={h} className="px-6 py-4 text-left text-muted-foreground/50 font-mono font-bold text-[9px] tracking-[0.15em] uppercase whitespace-nowrap">
+                  {h}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border/20">
             {isLoading ? (
               <tr>
-                <td colSpan={9} style={{ padding: 40, textAlign: "center", color: "#6B7280", fontFamily: MONO, fontSize: 12 }}>
-                  Loading cases...
+                <td colSpan={7} className="p-24 text-center">
+                  <RefreshCw size={24} className="animate-spin text-primary mx-auto mb-4 opacity-40" />
+                  <span className="font-mono text-[11px] text-muted-foreground uppercase font-bold tracking-widest">Refreshing Ledger Metadata...</span>
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={9} style={{ padding: 40, textAlign: "center", color: "#3D4251", fontFamily: MONO, fontSize: 12 }}>
-                  No cases found. Seed demo disputes to populate the queue.
+                <td colSpan={7} className="p-24 text-center">
+                  <div className="text-muted-foreground/30 mb-2 italic">Zero matches found for current filter cluster.</div>
                 </td>
               </tr>
             ) : (
-              filtered.map((item, index) => {
+              filtered.map((item) => {
                 const sla = getSlaState(item.respond_by);
-
                 return (
                   <tr
                     key={item.id}
                     onClick={() => navigate(`/cases/${item.id}`)}
-                    style={{
-                      borderBottom: index < filtered.length - 1 ? "1px solid #1A1D24" : "none",
-                      cursor: "pointer",
-                      transition: "background 0.1s",
-                    }}
-                    onMouseEnter={(event) => (event.currentTarget.style.background = "#1A1D24")}
-                    onMouseLeave={(event) => (event.currentTarget.style.background = "transparent")}
+                    className="cursor-pointer transition-all hover:bg-primary/[0.02] group border-l-4 border-l-transparent hover:border-l-primary"
                   >
-                    <td style={{ padding: "10px 14px" }}>
-                      <div style={{ fontFamily: MONO, color: "#E8EAF0", fontSize: 11 }}>{item.dispute_id}</div>
-                      <div style={{ fontFamily: MONO, color: "#3B82F6", fontSize: 10, marginTop: 2 }}>{item.id.slice(0, 8)}...</div>
+                    <td className="px-6 py-5">
+                      <div className="font-mono text-foreground font-bold text-[12px] group-hover:text-primary transition-colors tracking-tight">{item.dispute_id}</div>
+                      <div className="font-mono text-muted-foreground/40 text-[9px] mt-1 font-bold uppercase tracking-tighter">PAYMENT: {item.payment_id ?? "N/A"}</div>
                     </td>
-                    <td style={{ padding: "10px 14px", fontFamily: MONO, color: "#9CA3AF", fontSize: 11 }}>{item.payment_id ?? "Unknown"}</td>
-                    <td style={{ padding: "10px 14px", color: "#E8EAF0" }}>{item.merchant_name}</td>
-                    <td style={{ padding: "10px 14px", fontFamily: MONO, color: "#9CA3AF", fontSize: 11 }}>{formatReasonCode(item.reason_code)}</td>
-                    <td style={{ padding: "10px 14px", fontFamily: MONO, color: "#9CA3AF", fontSize: 11 }}>{formatPhase(item.phase)}</td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <div style={{ fontFamily: MONO, color: "#E8EAF0", fontSize: 11 }}>{formatDateTime(item.respond_by)}</div>
-                      <div style={{ fontFamily: MONO, color: sla.color, fontSize: 10, marginTop: 2 }}>{sla.label}</div>
+                    <td className="px-6 py-5 font-display font-bold text-foreground/90">{item.merchant_name}</td>
+                    <td className="px-6 py-5">
+                      <div className="font-mono text-foreground/70 text-[11px] font-bold uppercase tracking-tighter">{formatPhase(item.phase)}</div>
+                      <div className="font-mono text-muted-foreground/40 text-[9px] mt-1 italic">{formatReasonCode(item.reason_code)}</div>
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <div style={{ fontFamily: MONO, color: "#10B981", fontWeight: 600 }}>{formatCurrency(item.amount, item.currency)}</div>
-                      <div style={{ fontFamily: MONO, color: "#3D4251", fontSize: 10, marginTop: 2 }}>
-                        deducted {formatCurrency(item.amount_deducted, item.currency)}
+                    <td className="px-6 py-5">
+                      <div className="font-mono text-foreground/90 text-[11px] font-bold">{formatDateTime(item.respond_by)}</div>
+                      <div className="font-mono text-[9px] mt-1 font-bold uppercase tracking-tighter" style={{ color: sla.color }}>{sla.label}</div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="font-mono text-signal-green font-bold text-[13px]">{formatCurrency(item.amount, item.currency)}</div>
+                      <div className="font-mono text-muted-foreground/40 text-[9px] mt-1 uppercase font-bold tracking-tighter">
+                        NET {formatCurrency(item.amount_deducted, item.currency)}
                       </div>
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
+                    <td className="px-6 py-5">
                       <RecommendationBadge recommendation={item.recommendation} />
                     </td>
-                    <td style={{ padding: "10px 14px" }}>
-                      <StatusBadge status={item.status} />
-                      <div
-                        style={{
-                          fontFamily: MONO,
-                          fontSize: 10,
-                          color:
-                            item.approval_state === "Approved"
-                              ? "#10B981"
-                              : item.approval_state === "Rejected"
-                                ? "#EF4444"
-                                : item.approval_state === "Pending"
-                                  ? "#F59E0B"
-                                  : "#3D4251",
-                          marginTop: 6,
-                        }}
-                      >
-                        {item.approval_state}
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col gap-2">
+                        <StatusBadge status={item.status} />
+                        {item.approval_state !== "Not Needed" && (
+                          <div className={`
+                            font-mono text-[8px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded border w-fit
+                            ${item.approval_state === "Approved" ? "bg-signal-green/10 text-signal-green border-signal-green/20" : 
+                              item.approval_state === "Rejected" ? "bg-destructive/10 text-destructive border-destructive/20" : 
+                              item.approval_state === "Pending" ? "bg-hazard-orange/10 text-hazard-orange border-hazard-orange/20" : 
+                              "bg-secondary/50 text-muted-foreground/40 border-border"}
+                          `}>
+                            {item.approval_state}
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

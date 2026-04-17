@@ -3,39 +3,39 @@ import type { Role } from "../hooks/useRole";
 
 const ROLES: Role[] = ["Operator", "Approver", "Admin"];
 
-const roleColors: Record<Role, string> = {
-  Operator: "#10B981",
-  Approver: "#F59E0B",
-  Admin: "#3B82F6",
+const roleStyles: Record<Role, string> = {
+  Operator: "text-signal-green border-signal-green/30 bg-signal-green/10",
+  Approver: "text-hazard-orange border-hazard-orange/30 bg-hazard-orange/10",
+  Admin: "text-primary border-primary/30 bg-primary/10",
 };
 
 export default function RoleSwitcher() {
   const { role, setRole } = useRole();
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{ fontSize: 11, color: "#6B7280", fontFamily: "'IBM Plex Mono', monospace" }}>DEMO ROLE:</span>
-      <div style={{ display: "flex", gap: 4 }}>
-        {ROLES.map((r) => (
-          <button
-            key={r}
-            onClick={() => setRole(r)}
-            style={{
-              padding: "4px 10px",
-              borderRadius: 6,
-              border: `1px solid ${role === r ? roleColors[r] : "#2A2D36"}`,
-              background: role === r ? `${roleColors[r]}20` : "transparent",
-              color: role === r ? roleColors[r] : "#6B7280",
-              fontSize: 11,
-              fontWeight: 600,
-              cursor: "pointer",
-              fontFamily: "'IBM Plex Mono', monospace",
-              transition: "all 0.15s",
-            }}
-          >
-            {r}
-          </button>
-        ))}
+    <div className="flex items-center gap-4">
+      <span className="text-[10px] font-mono text-muted-foreground font-bold tracking-widest uppercase opacity-60">Identity Switcher</span>
+      <div className="flex gap-2">
+        {ROLES.map((r) => {
+          const isActive = role === r;
+          const styles = roleStyles[r];
+          
+          return (
+            <button
+              key={r}
+              onClick={() => setRole(r)}
+              className={`
+                px-3 py-1.5 rounded-md text-[10px] font-mono font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer
+                ${isActive 
+                  ? `${styles} shadow-sm shadow-black/20` 
+                  : "bg-secondary/30 border border-border/50 text-muted-foreground/60 hover:text-foreground hover:bg-secondary/50 hover:border-border"
+                }
+              `}
+            >
+              {r}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

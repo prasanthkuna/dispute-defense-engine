@@ -21,13 +21,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
-const MONO = "'Space Mono', monospace";
-const SYNE = "'Syne', sans-serif";
-const CASE_MONO = "'IBM Plex Mono', monospace";
-
 function getDisputePayload(payload: unknown): Record<string, any> | null {
   if (!payload) return null;
-
   try {
     const parsed = typeof payload === "string" ? JSON.parse(payload) : payload;
     if (!parsed) return null;
@@ -42,30 +37,22 @@ function MetricCard({
   value,
   note,
   icon: Icon,
-  color,
+  colorClass,
 }: {
   label: string;
   value: string | number;
   note: string;
   icon: any;
-  color: string;
+  colorClass: string;
 }) {
   return (
-    <div
-      style={{
-        background: "linear-gradient(180deg, rgba(17,19,24,0.96) 0%, rgba(10,12,16,0.96) 100%)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 10,
-        padding: 20,
-        minHeight: 148,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <span style={{ fontSize: 11, fontFamily: MONO, color: "#6B7280", letterSpacing: "0.08em" }}>{label}</span>
-        <Icon size={16} color={color} />
+    <div className="bg-card border border-border rounded-lg p-5 min-h-[148px] flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-widest">{label}</span>
+        <Icon size={16} className={colorClass} />
       </div>
-      <div style={{ fontSize: 28, fontFamily: CASE_MONO, fontWeight: 700, color, letterSpacing: "-0.03em" }}>{value}</div>
-      <p style={{ margin: "10px 0 0", fontSize: 12, color: "#6B7280", lineHeight: 1.5 }}>{note}</p>
+      <div className={`text-2xl font-display font-bold tracking-tight ${colorClass}`}>{value}</div>
+      <p className="mt-2 text-[12px] text-muted-foreground leading-relaxed font-medium">{note}</p>
     </div>
   );
 }
@@ -90,7 +77,6 @@ export default function DashboardPage() {
     if (!stats || stats.total_cases === 0) {
       return "Seed the four curated disputes to showcase intake normalization, evidence collection, decisioning, approvals, and bank-ready drafting.";
     }
-
     return `${stats.total_cases} live cases spanning ${formatCurrency(stats.total_disputed_amount)} in dispute value, with ${stats.overdue_count} overdue and ${stats.due_in_24h_count} due within 24 hours.`;
   }, [stats]);
 
@@ -100,19 +86,12 @@ export default function DashboardPage() {
     setIsSeeding(true);
     try {
       await client.simulation.seed();
-      toast({
-        title: "Demo disputes seeded",
-        description: "Four Razorpay-aligned cases are now available in the queue.",
-      });
+      toast({ title: "Demo disputes seeded", description: "Four Razorpay-aligned cases are now available." });
       qc.invalidateQueries({ queryKey: ["cases"] });
       qc.invalidateQueries({ queryKey: ["cases", "stats"] });
       qc.invalidateQueries({ queryKey: ["ingest", "events"] });
     } catch {
-      toast({
-        title: "Seed failed",
-        description: "Unable to create demo disputes right now.",
-        variant: "destructive",
-      });
+      toast({ title: "Seed failed", description: "Unable to create demo disputes.", variant: "destructive" });
     } finally {
       setIsSeeding(false);
     }
@@ -122,19 +101,12 @@ export default function DashboardPage() {
     setIsResetting(true);
     try {
       await client.simulation.reset();
-      toast({
-        title: "Environment reset",
-        description: "All demo cases and telemetry were cleared. Seed again to rebuild the queue.",
-      });
+      toast({ title: "Environment reset", description: "All demo cases and telemetry were cleared." });
       qc.invalidateQueries({ queryKey: ["cases"] });
       qc.invalidateQueries({ queryKey: ["cases", "stats"] });
       qc.invalidateQueries({ queryKey: ["ingest", "events"] });
     } catch {
-      toast({
-        title: "Reset failed",
-        description: "The environment could not be cleared.",
-        variant: "destructive",
-      });
+      toast({ title: "Reset failed", description: "The environment could not be cleared.", variant: "destructive" });
     } finally {
       setIsResetting(false);
     }
@@ -142,261 +114,136 @@ export default function DashboardPage() {
 
   if (statsLoading) {
     return (
-      <div style={{ padding: 80, display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
-        <Loader2 size={24} className="animate-spin" color="#3B82F6" />
-        <span style={{ fontFamily: MONO, color: "#6B7280" }}>Loading dispute telemetry...</span>
+      <div className="p-20 flex items-center justify-center gap-4">
+        <Loader2 size={24} className="animate-spin text-primary" />
+        <span className="font-mono text-[13px] text-muted-foreground uppercase tracking-widest font-bold">Synchronizing Global Telemetry...</span>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 32, maxWidth: 1500, margin: "0 auto" }}>
+    <div className="p-8 max-w-[1500px] mx-auto animate-stagger">
       {(statsError || eventsError) && (
-        <div
-          style={{
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.2)",
-            color: "#EF4444",
-            borderRadius: 8,
-            padding: "12px 16px",
-            marginBottom: 20,
-            fontSize: 13,
-          }}
-        >
-          Some live telemetry is unavailable. The dashboard will keep retrying.
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg px-5 py-4 mb-6 text-[13px] font-medium flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <AlertTriangle size={16} />
+          <span>Real-time telemetry stream interrupted. Attempting reconnection...</span>
         </div>
       )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1.5fr 1fr",
-          gap: 24,
-          marginBottom: 24,
-          alignItems: "start",
-        }}
-      >
-        <div
-          style={{
-            background: "linear-gradient(135deg, #0C111A 0%, #08090C 60%, #0B1426 100%)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14,
-            padding: 28,
-            position: "relative",
-            overflow: "hidden",
-            minHeight: 420,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              <ShieldCheck size={16} color="#3B82F6" />
-              <span style={{ fontFamily: MONO, fontSize: 11, color: "#3B82F6", letterSpacing: "0.08em" }}>RAZORPAY DEMO CONSOLE</span>
+      <div className="grid grid-cols-1 xl:grid-cols-[1.6fr_1fr] gap-6 mb-6 items-stretch">
+        <div className="bg-card border border-border rounded-xl p-8 relative overflow-hidden flex flex-col justify-between shadow-lg h-[480px]">
+          <div className="relative z-10">
+            <div className="flex items-center gap-2.5 mb-5">
+              <ShieldCheck size={18} className="text-primary" />
+              <span className="font-mono text-[11px] text-primary font-bold tracking-[0.2em] uppercase">Dispute Defense Command Center</span>
             </div>
-            <h1 style={{ margin: 0, fontFamily: SYNE, fontSize: 52, lineHeight: 1, color: "#F1F4F9" }}>
-              Dispute Ops
+            <h1 className="m-0 font-display text-6xl leading-[1.1] text-foreground tracking-tight">
+              Operational
               <br />
-              Command View
+              <span className="text-muted-foreground/40">Intelligence View</span>
             </h1>
-            <p style={{ margin: "16px 0 0", maxWidth: 700, color: "#9CA3AF", fontSize: 15, lineHeight: 1.6 }}>
+            <p className="mt-6 max-w-[600px] text-muted-foreground text-[16px] leading-relaxed font-medium">
               {summaryLine}
             </p>
           </div>
 
-          <div style={{ marginTop: 24 }}>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div className="mt-10 relative z-10">
+            <div className="flex gap-4 flex-wrap">
               <button
                 onClick={seedScenarios}
                 disabled={isSeeding || hasSeededCases}
-                style={{
-                  background: "#3B82F6",
-                  border: "none",
-                  color: "#fff",
-                  borderRadius: 8,
-                  padding: "12px 18px",
-                  fontFamily: MONO,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  cursor: isSeeding ? "wait" : hasSeededCases ? "not-allowed" : "pointer",
-                  opacity: hasSeededCases ? 0.55 : 1,
-                }}
+                className={`
+                  bg-primary text-primary-foreground rounded-lg px-6 py-3.5 font-mono text-[12px] font-bold uppercase tracking-widest
+                  flex items-center gap-3 transition-all duration-300 shadow-xl shadow-primary/20
+                  ${isSeeding ? "opacity-80 cursor-wait" : hasSeededCases ? "opacity-40 cursor-not-allowed" : "hover:bg-primary/90 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"}
+                `}
               >
-                {isSeeding ? <Loader2 size={14} className="animate-spin" /> : <WandSparkles size={14} />}
-                {isSeeding ? "Seeding demo cases..." : hasSeededCases ? "Demo disputes already seeded" : "Seed 4 demo disputes"}
+                {isSeeding ? <Loader2 size={16} className="animate-spin" /> : <WandSparkles size={16} />}
+                {isSeeding ? "Seeding..." : hasSeededCases ? "Scenarios Active" : "Initialize Demo Cluster"}
               </button>
 
               <button
                 onClick={resetEnvironment}
                 disabled={isResetting}
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "#E8EAF0",
-                  borderRadius: 8,
-                  padding: "12px 18px",
-                  fontFamily: MONO,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  cursor: isResetting ? "wait" : "pointer",
-                }}
+                className={`
+                  bg-secondary/50 border border-border text-foreground rounded-lg px-6 py-3.5 font-mono text-[12px] font-bold uppercase tracking-widest
+                  flex items-center gap-3 transition-all duration-300
+                  ${isResetting ? "opacity-80 cursor-wait" : "hover:bg-secondary hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"}
+                `}
               >
-                <RefreshCw size={14} className={isResetting ? "animate-spin" : ""} />
-                {isResetting ? "Resetting..." : "Clear environment"}
+                <RefreshCw size={16} className={isResetting ? "animate-spin" : ""} />
+                {isResetting ? "Resetting..." : "Purge Environment"}
               </button>
             </div>
 
-            <div style={{ display: "flex", gap: 18, marginTop: 22, flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6B7280", fontSize: 12 }}>
-                <Bot size={14} color="#8B5CF6" />
-                Agent trace + policy engine
+            <div className="flex gap-6 mt-8 flex-wrap border-t border-border/30 pt-6">
+              <div className="flex items-center gap-2.5 text-muted-foreground/60 text-[12px] font-mono font-bold uppercase tracking-tight">
+                <Bot size={15} className="text-accent-foreground" />
+                Active Agent Monitoring
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6B7280", fontSize: 12 }}>
-                <CheckCircle2 size={14} color="#10B981" />
-                Editable draft + approval routing
+              <div className="flex items-center gap-2.5 text-muted-foreground/60 text-[12px] font-mono font-bold uppercase tracking-tight">
+                <CheckCircle2 size={15} className="text-signal-green" />
+                Multi-Role Approval Gating
               </div>
             </div>
           </div>
+          
+          <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
         </div>
 
-        <div
-          style={{
-            background: "#111318",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14,
-            padding: 24,
-            height: 420,
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <Activity size={15} color="#3B82F6" />
-            <span style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", letterSpacing: "0.08em" }}>RECENT WEBHOOK INTAKE</span>
+        <div className="bg-card border border-border rounded-xl p-6 flex flex-col shadow-lg overflow-hidden h-[480px]">
+          <div className="flex items-center justify-between mb-5 border-b border-border/50 pb-4">
+            <div className="flex items-center gap-2.5">
+              <Activity size={16} className="text-primary" />
+              <span className="font-mono text-[11px] text-foreground font-bold uppercase tracking-[0.15em]">Live Ingestion Stream</span>
+            </div>
+            <div className="flex gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-signal-green animate-pulse" />
+              <div className="w-1.5 h-1.5 rounded-full bg-signal-green/40" />
+              <div className="w-1.5 h-1.5 rounded-full bg-signal-green/20" />
+            </div>
           </div>
 
           {events.length === 0 ? (
-            <div style={{ color: "#6B7280", fontSize: 13, lineHeight: 1.6 }}>
-              No disputes ingested yet. Use the demo seed to create four realistic intake events without asking the reviewer to wire a live webhook.
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+              <div className="w-12 h-12 rounded-full bg-secondary/30 flex items-center justify-center mb-4">
+                <Activity size={20} className="text-muted-foreground/20" />
+              </div>
+              <p className="text-muted-foreground/60 text-[13px] leading-relaxed font-medium">
+                No ingestion events detected. Initialize the demo cluster to simulate real-time dispute webhooks.
+              </p>
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gap: 12,
-                overflowY: "auto",
-                paddingRight: 6,
-                minHeight: 0,
-                flex: 1,
-              }}
-            >
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-border/50 scrollbar-track-transparent">
               {events.map((event) => {
                 const dispute = getDisputePayload(event.payload_json);
-                const merchantName = dispute?.merchant_name ?? "Merchant of record unavailable";
-                const paymentId = dispute?.payment_id ?? "Payment id unavailable";
+                const merchantName = dispute?.merchant_name ?? "Unknown Merchant";
+                const paymentId = dispute?.payment_id ?? "—";
                 const phase = dispute?.phase ? String(dispute.phase).replace(/_/g, " ").toUpperCase() : "PHASE UNKNOWN";
                 const status = dispute?.status ? String(dispute.status).replace(/_/g, " ").toUpperCase() : "STATUS UNKNOWN";
-                const merchantReference = dispute?.merchant_reference ? String(dispute.merchant_reference).toUpperCase() : null;
-                const amount =
-                  typeof dispute?.amount === "number" ? formatCurrency(dispute.amount / 100, dispute.currency ?? "INR") : null;
+                const amount = typeof dispute?.amount === "number" ? formatCurrency(dispute.amount / 100, dispute.currency ?? "INR") : null;
 
                 return (
-                  <div
-                    key={event.id}
-                    style={{
-                      background: "linear-gradient(180deg, rgba(10,12,16,0.98) 0%, rgba(14,17,24,0.95) 100%)",
-                      border: "1px solid #2A2D36",
-                      borderRadius: 10,
-                      padding: 14,
-                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                      <span style={{ fontFamily: MONO, fontSize: 11, color: "#E8EAF0" }}>{event.event_type}</span>
-                      <span style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280" }}>{formatDateTime(event.processed_at)}</span>
+                  <div key={event.id} className="bg-secondary/20 border border-border/40 rounded-lg p-4 hover:border-primary/30 transition-all group">
+                    <div className="flex items-center justify-between gap-3 mb-2.5">
+                      <span className="font-mono text-[10px] text-primary font-bold uppercase tracking-tight truncate">{event.event_type}</span>
+                      <span className="font-mono text-[9px] text-muted-foreground/40 whitespace-nowrap">{formatDateTime(event.processed_at)}</span>
                     </div>
 
-                    <div style={{ fontFamily: MONO, fontSize: 10, color: "#3B82F6", marginBottom: 6 }}>
-                      {dispute?.id ?? event.external_event_id}
-                    </div>
+                    <div className="font-display text-[14px] font-bold text-foreground mb-3 truncate group-hover:text-primary transition-colors">{merchantName}</div>
 
-                    <div style={{ fontSize: 13, color: "#E8EAF0", lineHeight: 1.5, marginBottom: 10 }}>{merchantName}</div>
-
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <span
-                        style={{
-                          fontFamily: MONO,
-                          fontSize: 10,
-                          color: "#9CA3AF",
-                          border: "1px solid rgba(59,130,246,0.2)",
-                          borderRadius: 999,
-                          padding: "4px 8px",
-                          background: "rgba(59,130,246,0.06)",
-                        }}
-                      >
-                        PAYMENT {paymentId}
+                    <div className="flex gap-2 flex-wrap">
+                      <span className="font-mono text-[9px] text-muted-foreground font-bold border border-border/50 rounded-md px-1.5 py-0.5 bg-background/50">
+                        {paymentId}
                       </span>
-                      {merchantReference ? (
-                        <span
-                          style={{
-                            fontFamily: MONO,
-                            fontSize: 10,
-                            color: "#9CA3AF",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: 999,
-                            padding: "4px 8px",
-                          }}
-                        >
-                          REF {merchantReference}
-                        </span>
-                      ) : null}
-                      <span
-                        style={{
-                          fontFamily: MONO,
-                          fontSize: 10,
-                          color: "#9CA3AF",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          borderRadius: 999,
-                          padding: "4px 8px",
-                        }}
-                      >
+                      <span className="font-mono text-[9px] text-foreground/60 font-bold border border-border/50 rounded-md px-1.5 py-0.5 bg-secondary/40 uppercase tracking-tighter">
                         {phase}
                       </span>
-                      <span
-                        style={{
-                          fontFamily: MONO,
-                          fontSize: 10,
-                          color: "#9CA3AF",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          borderRadius: 999,
-                          padding: "4px 8px",
-                        }}
-                      >
-                        {status}
-                      </span>
-                      {amount ? (
-                        <span
-                          style={{
-                            fontFamily: MONO,
-                            fontSize: 10,
-                            color: "#10B981",
-                            border: "1px solid rgba(16,185,129,0.2)",
-                            borderRadius: 999,
-                            padding: "4px 8px",
-                            background: "rgba(16,185,129,0.06)",
-                          }}
-                        >
+                      {amount && (
+                        <span className="font-mono text-[9px] text-signal-green font-bold border border-signal-green/20 rounded-md px-1.5 py-0.5 bg-signal-green/5">
                           {amount}
                         </span>
-                      ) : null}
+                      )}
                     </div>
                   </div>
                 );
@@ -406,107 +253,57 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 16, marginBottom: 24 }}>
-        <MetricCard
-          label="TOTAL DISPUTED VALUE"
-          value={formatCurrency(stats?.total_disputed_amount ?? 0)}
-          note="Total amount currently represented in the active dispute queue."
-          icon={BadgeIndianRupee}
-          color="#10B981"
-        />
-        <MetricCard
-          label="CONTESTABLE VALUE"
-          value={formatCurrency(stats?.contestable_amount ?? 0)}
-          note="Cases the engine currently recommends contesting."
-          icon={Scale}
-          color="#3B82F6"
-        />
-        <MetricCard
-          label="REFUND EXPOSURE"
-          value={formatCurrency(stats?.acceptance_amount ?? 0)}
-          note="Cases recommended for acceptance based on fulfillment evidence."
-          icon={AlertTriangle}
-          color="#F59E0B"
-        />
-        <MetricCard
-          label="MANUAL REVIEW VALUE"
-          value={formatCurrency(stats?.escalated_amount ?? 0)}
-          note="Cases intentionally escalated because evidence is incomplete or conflicting."
-          icon={Bot}
-          color="#EF4444"
-        />
-        <MetricCard
-          label="DUE IN 24 HOURS"
-          value={stats?.due_in_24h_count ?? 0}
-          note="Cases that need attention before the next business day."
-          icon={Clock3}
-          color="#F59E0B"
-        />
-        <MetricCard
-          label="OVERDUE"
-          value={stats?.overdue_count ?? 0}
-          note="Cases already past their current response deadline."
-          icon={AlertTriangle}
-          color="#EF4444"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <MetricCard label="DISPUTED VALUE" value={formatCurrency(stats?.total_disputed_amount ?? 0)} note="Active queue exposure" icon={BadgeIndianRupee} colorClass="text-signal-green" />
+        <MetricCard label="CONTESTABLE" value={formatCurrency(stats?.contestable_amount ?? 0)} note="Strong evidence found" icon={Scale} colorClass="text-primary" />
+        <MetricCard label="ACCEPTANCE" value={formatCurrency(stats?.acceptance_amount ?? 0)} note="Low fulfillment proof" icon={AlertTriangle} colorClass="text-hazard-orange" />
+        <MetricCard label="MANUAL REVIEW" value={formatCurrency(stats?.escalated_amount ?? 0)} note="High complexity cases" icon={Bot} colorClass="text-accent-foreground" />
+        <MetricCard label="DUE 24H" value={stats?.due_in_24h_count ?? 0} note="Critical response window" icon={Clock3} colorClass="text-hazard-orange" />
+        <MetricCard label="OVERDUE" value={stats?.overdue_count ?? 0} note="Response window closed" icon={AlertTriangle} colorClass="text-destructive" />
       </div>
 
-      <div
-        style={{
-          background: "#111318",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 14,
-          padding: 24,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 20 }}>
-          <div>
-            <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", letterSpacing: "0.08em" }}>CURATED DEMO SCENARIOS</div>
-            <div style={{ marginTop: 6, color: "#9CA3AF", fontSize: 14 }}>
-              Each case demonstrates a different Razorpay dispute workflow: strong defense, vernacular evidence, smart refund acceptance, and manual review.
-            </div>
+      <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
+        <div className="flex items-center justify-between gap-4 mb-8 border-b border-border/50 pb-6">
+          <div className="space-y-1">
+            <div className="font-mono text-[11px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Curated Strategy Scenarios</div>
+            <p className="m-0 text-muted-foreground/80 text-[14px] font-medium leading-relaxed max-w-[800px]">
+              Four end-to-end workflows designed to stress-test your dispute defense strategy across diverse fulfillment patterns.
+            </p>
           </div>
-          <div style={{ fontFamily: MONO, fontSize: 11, color: "#3B82F6" }}>{SCENARIOS.length} scenarios</div>
+          <div className="bg-secondary/50 border border-border px-3 py-1 rounded-full font-mono text-[11px] text-primary font-bold uppercase">
+            {SCENARIOS.length} Operational Patterns
+          </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {SCENARIOS.map((scenario) => (
-            <div
-              key={scenario.type}
-              style={{
-                background: "#0A0C10",
-                border: "1px solid #2A2D36",
-                borderRadius: 12,
-                padding: 18,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
-                <span style={{ fontFamily: SYNE, fontSize: 22, fontWeight: 700, color: "#F1F4F9" }}>{scenario.label}</span>
-                <span
-                  style={{
-                    fontFamily: MONO,
-                    fontSize: 10,
-                    color:
-                      scenario.expected_recommendation === "Contest"
-                        ? "#3B82F6"
-                        : scenario.expected_recommendation === "Accept"
-                          ? "#F59E0B"
-                          : "#EF4444",
-                  }}
-                >
-                  {scenario.expected_recommendation.toUpperCase()}
-                </span>
+            <div key={scenario.type} className="bg-secondary/10 border border-border/30 rounded-xl p-6 hover:border-primary/20 hover:bg-secondary/20 transition-all flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-4 mb-4">
+                  <h3 className="m-0 font-display text-2xl font-bold text-foreground leading-none">{scenario.label}</h3>
+                  <span className={`font-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${
+                    scenario.expected_recommendation === "Contest" ? "text-primary border-primary/20 bg-primary/5" :
+                    scenario.expected_recommendation === "Accept" ? "text-hazard-orange border-hazard-orange/20 bg-hazard-orange/5" :
+                    "text-destructive border-destructive/20 bg-destructive/5"
+                  }`}>
+                    {scenario.expected_recommendation}
+                  </span>
+                </div>
+                <p className="m-0 text-muted-foreground text-[14px] leading-relaxed mb-6 font-medium">
+                  {scenario.description}
+                </p>
+                <div className="flex gap-2 flex-wrap mb-6">
+                  {["network", "phase", "amount", "expected_confidence"].map((key) => (
+                    <span key={key} className="bg-background/40 border border-border/50 px-2.5 py-1 rounded-md font-mono text-[10px] text-muted-foreground/60 font-bold uppercase tracking-tight">
+                      {key === "amount" ? formatCurrency(scenario.amount) : key === "expected_confidence" ? `${scenario.expected_confidence} Confidence` : (scenario as any)[key].replace("_", " ")}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <p style={{ margin: 0, color: "#9CA3AF", fontSize: 13, lineHeight: 1.6 }}>{scenario.description}</p>
-              <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 14, fontFamily: MONO, fontSize: 11, color: "#6B7280" }}>
-                <span>{scenario.network}</span>
-                <span>{scenario.phase.replace("_", " ")}</span>
-                <span>{formatCurrency(scenario.amount)}</span>
-                <span>{scenario.expected_confidence} confidence</span>
-              </div>
-              <div style={{ display: "grid", gap: 6, marginTop: 16 }}>
-                {scenario.highlights.slice(0, 4).map((highlight) => (
-                  <div key={highlight} style={{ fontSize: 12, color: "#E8EAF0" }}>
+              <div className="space-y-2 border-t border-border/30 pt-4">
+                {scenario.highlights.slice(0, 3).map((highlight) => (
+                  <div key={highlight} className="text-[12px] text-foreground/70 flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30 mt-1.5 shrink-0" />
                     {highlight}
                   </div>
                 ))}

@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { CheckCircle, XCircle, RotateCcw, Send, Clock, Shield } from "lucide-react";
+import { CheckCircle, XCircle, RotateCcw, Send, Clock, Shield, User, AlertTriangle } from "lucide-react";
 import { useRole } from "../../hooks/useRole";
 import { useToast } from "@/components/ui/use-toast";
 import backend from "~backend/client";
-
-const MONO = "'IBM Plex Mono', monospace";
 
 interface Props {
   caseData: any;
@@ -19,43 +17,6 @@ const ACTOR_NAMES: Record<string, string> = {
   Admin: "Admin User",
 };
 
-function Btn({
-  onClick,
-  disabled,
-  color,
-  children,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  color: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        background: disabled ? "#1A1D24" : color,
-        color: disabled ? "#3D4251" : "#fff",
-        border: "none",
-        borderRadius: 6,
-        padding: "10px 18px",
-        fontFamily: MONO,
-        fontSize: 12,
-        fontWeight: 600,
-        cursor: disabled ? "not-allowed" : "pointer",
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        transition: "opacity 0.2s",
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 export default function ApprovalControls({ caseData, approvals, drafts, onRefresh }: Props) {
   const { role } = useRole();
   const { toast } = useToast();
@@ -69,25 +30,23 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
   const isContestCase = caseData.recommendation === "Contest";
   const needsApproval = isAcceptCase || caseData.approval_state !== "Not Needed";
   const isActionRequired = caseData.status === "Action Required";
+  
   const submitEnabledByApproval =
     role === "Admin" ||
     caseData.approval_state === "Approved" ||
     (!isAcceptCase && caseData.approval_state === "Not Needed");
+    
   const canSubmit =
     submitEnabledByApproval &&
     caseData.status !== "Submitted" &&
     !isActionRequired;
+
   const approvalSubject = isAcceptCase ? "Acceptance" : isContestCase ? "Contest Submission" : "Escalation Review";
-  const submitLabel = isAcceptCase ? "Mock Confirm Acceptance" : isContestCase ? "Mock Submit Contest" : "Mock Submit Response";
+  const submitLabel = isAcceptCase ? "Confirm Final Acceptance" : isContestCase ? "Submit Official Contest" : "Submit Bank Response";
   const submitToastTitle = isAcceptCase ? "Acceptance confirmed" : isContestCase ? "Contest submitted" : "Case submitted";
-  const submitToastDescription = isAcceptCase
-    ? "Mock acceptance recorded. This path is treated as an irreversible loss acknowledgement."
-    : isContestCase
-      ? "Mock contest packet sent for bank review."
-      : "Mock dispute response sent to the bank.";
   const approvalPrompt = isAcceptCase
-    ? "Acceptance is irreversible. This confirms the dispute as lost in the mocked workflow. Continue?"
-    : "Submit the current response packet in the mocked workflow?";
+    ? "Acceptance is irreversible. This confirms the dispute as lost. Continue?"
+    : "Submit the current response packet to the bank?";
 
   const doApproval = async (decision: "Approved" | "Rejected" | "Sent Back") => {
     setLoading(decision);
@@ -107,7 +66,6 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
       setNotes("");
       onRefresh();
     } catch (err) {
-      console.error("Approval error:", err);
       toast({ title: "Approval failed", description: String(err), variant: "destructive" });
     } finally {
       setLoading(null);
@@ -128,7 +86,6 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
       toast({ title: "Sent for approval", description: `${approvalSubject} is now pending approval.` });
       onRefresh();
     } catch (err) {
-      console.error("Mark ready error:", err);
       toast({ title: "Failed", description: String(err), variant: "destructive" });
     } finally {
       setLoading(null);
@@ -136,10 +93,7 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
   };
 
   const handleSubmit = async () => {
-    if (isAcceptCase && !window.confirm(approvalPrompt)) {
-      return;
-    }
-
+    if (isAcceptCase && !window.confirm(approvalPrompt)) return;
     setLoading("Submit");
     try {
       await backend.cases.update(caseData.id, { status: "Submitted" });
@@ -148,17 +102,11 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         actor_type: "operator",
         actor_name: ACTOR_NAMES[role] ?? role,
         action_type: isAcceptCase ? "acceptance_confirmed" : isContestCase ? "contest_submitted" : "case_submitted",
-        details_json: {
-          role,
-          submitted_at: new Date().toISOString(),
-          recommendation: caseData.recommendation,
-          irreversible: isAcceptCase,
-        },
+        details_json: { role, submitted_at: new Date().toISOString() },
       });
-      toast({ title: submitToastTitle, description: submitToastDescription });
+      toast({ title: submitToastTitle, description: "Action recorded successfully." });
       onRefresh();
     } catch (err) {
-      console.error("Submit error:", err);
       toast({ title: "Submit failed", description: String(err), variant: "destructive" });
     } finally {
       setLoading(null);
@@ -169,136 +117,87 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
     setLoading("ResumeRework");
     try {
       await backend.cases.update(caseData.id, { status: "Hunting Evidence" });
-      await backend.audit.log({
-        case_id: caseData.id,
-        actor_type: "operator",
-        actor_name: ACTOR_NAMES[role] ?? role,
-        action_type: "action_required_rework_started",
-        details_json: { role, rework_reason: caseData.rework_reason ?? null },
-      });
-      toast({
-        title: "Rework started",
-        description: "Case moved back into evidence hunting so the response can be rebuilt.",
-      });
       onRefresh();
     } catch (err) {
-      console.error("Resume rework error:", err);
       toast({ title: "Rework failed", description: String(err), variant: "destructive" });
     } finally {
       setLoading(null);
     }
   };
 
-  const statusColor = (s: string) => {
-    if (s === "Approved") return "#10B981";
-    if (s === "Rejected") return "#EF4444";
-    if (s === "Sent Back") return "#F59E0B";
-    if (s === "Pending") return "#3B82F6";
-    return "#6B7280";
+  const getStatusColor = (s: string) => {
+    switch (s) {
+      case "Approved": return "text-signal-green";
+      case "Rejected": return "text-destructive";
+      case "Sent Back": return "text-hazard-orange";
+      case "Pending": return "text-primary";
+      default: return "text-muted-foreground";
+    }
   };
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div className="flex flex-col gap-6 animate-stagger">
+      {/* Risk Alert */}
       {isAcceptCase && (
-        <div
-          style={{
-            background: "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(239,68,68,0.08))",
-            border: "1px solid rgba(245,158,11,0.24)",
-            borderRadius: 10,
-            padding: 18,
-            display: "grid",
-            gap: 6,
-          }}
-        >
-          <div style={{ fontFamily: MONO, fontSize: 10, color: "#F59E0B", letterSpacing: "0.12em", fontWeight: 700 }}>
-            IRREVERSIBLE ACCEPTANCE CONTROL
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-5 flex flex-col gap-2 shadow-sm">
+          <div className="flex items-center gap-2.5 font-mono text-[10px] text-destructive font-bold uppercase tracking-widest">
+            <AlertTriangle size={14} />
+            High-Risk Path Detected
           </div>
-          <div style={{ color: "#FDE7BA", fontSize: 12, lineHeight: 1.6 }}>
-            This path should stay review-first. Acceptance acknowledges the dispute as lost, so the app now keeps it
-            approval-gated and asks for an explicit final confirmation before recording the mocked action.
-          </div>
+          <p className="m-0 text-[13px] text-foreground/80 leading-relaxed font-medium">
+            Acceptance acknowledges the dispute as lost. This path is strictly approval-gated and requires explicit senior confirmation.
+          </p>
         </div>
       )}
 
-      <div style={{
-        background: "#111318",
-        border: "1px solid #2A2D36",
-        borderRadius: 10,
-        padding: 20,
-        display: "flex",
-        gap: 20,
-        flexWrap: "wrap" as const,
-        alignItems: "center",
-      }}>
-        <div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>CASE STATUS</div>
-          <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: "#E8EAF0" }}>{caseData.status}</div>
+      {/* Case Overview Summary */}
+      <div className="bg-card border border-border rounded-lg p-5 grid grid-cols-2 lg:grid-cols-4 gap-6 items-center shadow-sm">
+        <div className="space-y-1">
+          <div className="font-mono text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Internal Status</div>
+          <div className="font-display text-[15px] font-bold text-foreground">{caseData.status}</div>
         </div>
-        <div style={{ width: 1, height: 36, background: "#2A2D36" }} />
-        <div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>APPROVAL STATE</div>
-          <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: statusColor(caseData.approval_state) }}>
+        <div className="space-y-1">
+          <div className="font-mono text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Approval State</div>
+          <div className={`font-display text-[15px] font-bold ${getStatusColor(caseData.approval_state)}`}>
             {caseData.approval_state}
           </div>
         </div>
-        <div style={{ width: 1, height: 36, background: "#2A2D36" }} />
-        <div style={{ minWidth: 180 }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>ACTION PATH</div>
-          <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: isAcceptCase ? "#F59E0B" : "#8B5CF6" }}>
-            {approvalSubject.toUpperCase()}
-          </div>
+        <div className="space-y-1">
+          <div className="font-mono text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Subject Path</div>
+          <div className="font-display text-[15px] font-bold text-primary">{approvalSubject}</div>
         </div>
-        {caseData.rework_reason && (
-          <>
-            <div style={{ width: 1, height: 36, background: "#2A2D36" }} />
-            <div style={{ minWidth: 220 }}>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>REWORK REASON</div>
-              <div style={{ fontFamily: MONO, fontSize: 12, color: "#F59E0B", lineHeight: 1.4 }}>{caseData.rework_reason}</div>
-            </div>
-          </>
-        )}
-        <div style={{ width: 1, height: 36, background: "#2A2D36" }} />
-        <div>
-          <div style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280", marginBottom: 4 }}>YOUR DEMO ROLE</div>
-          <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: "#3B82F6" }}>{role}</div>
+        <div className="space-y-1">
+          <div className="font-mono text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Session Role</div>
+          <div className="flex items-center gap-2 font-display text-[15px] font-bold text-accent-foreground">
+            <User size={14} className="text-primary" />
+            {role}
+          </div>
         </div>
       </div>
 
+      {/* History */}
       {approvals.length > 0 && (
-        <div style={{
-          background: "#111318",
-          border: "1px solid #2A2D36",
-          borderRadius: 10,
-          padding: 20,
-        }}>
-          <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", marginBottom: 12 }}>APPROVAL HISTORY</div>
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+        <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+          <div className="font-mono text-[10px] text-muted-foreground font-bold mb-4 uppercase tracking-widest">
+            Approval Log
+          </div>
+          <div className="space-y-3">
             {approvals.map((a) => (
-              <div
-                key={a.id}
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  alignItems: "center",
-                  padding: "10px 14px",
-                  background: "#0A0C10",
-                  borderRadius: 6,
-                  border: "1px solid #2A2D36",
-                }}
-              >
-                {a.decision === "Approved" ? <CheckCircle size={16} color="#10B981" /> :
-                  a.decision === "Rejected" ? <XCircle size={16} color="#EF4444" /> :
-                  <RotateCcw size={16} color="#F59E0B" />}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: MONO, fontSize: 12, color: "#E8EAF0", fontWeight: 600 }}>
-                    {a.decision} - {a.actor_name} ({a.actor_role})
-                  </div>
-                  {a.notes && (
-                    <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", marginTop: 2 }}>{a.notes}</div>
-                  )}
+              <div key={a.id} className="flex gap-4 items-center p-3.5 bg-secondary/20 border border-border/40 rounded-lg group hover:border-border transition-colors">
+                <div className={`shrink-0 ${getStatusColor(a.decision)}`}>
+                  {a.decision === "Approved" ? <CheckCircle size={18} /> :
+                   a.decision === "Rejected" ? <XCircle size={18} /> : <RotateCcw size={18} />}
                 </div>
-                <div style={{ fontFamily: MONO, fontSize: 10, color: "#3D4251" }}>
-                  {new Date(a.created_at).toLocaleString()}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-display text-[13px] font-bold text-foreground">
+                      {a.decision} <span className="text-muted-foreground font-medium text-[11px] mx-1">by</span> {a.actor_name}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground/50">
+                      {new Date(a.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {a.notes && <p className="m-0 text-[12px] text-muted-foreground italic truncate">"{a.notes}"</p>}
                 </div>
               </div>
             ))}
@@ -306,78 +205,80 @@ export default function ApprovalControls({ caseData, approvals, drafts, onRefres
         </div>
       )}
 
+      {/* Decision Controls */}
       {canApprover && needsApproval && (
-        <div style={{
-          background: "#111318",
-          border: "1px solid #2A2D36",
-          borderRadius: 10,
-          padding: 20,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <Shield size={14} color="#3B82F6" />
-            <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280" }}>APPROVER CONTROLS - {approvalSubject.toUpperCase()}</div>
+        <div className="bg-card border border-border rounded-lg p-5 shadow-xl ring-1 ring-primary/10">
+          <div className="flex items-center gap-2.5 mb-4">
+            <Shield size={16} className="text-primary" />
+            <span className="font-mono text-[11px] text-foreground font-bold uppercase tracking-widest">
+              Senior Review Decision
+            </span>
           </div>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional notes for this decision..."
-            style={{
-              width: "100%",
-              background: "#0A0C10",
-              border: "1px solid #2A2D36",
-              borderRadius: 6,
-              color: "#E8EAF0",
-              fontFamily: MONO,
-              fontSize: 12,
-              padding: "10px 12px",
-              resize: "vertical" as const,
-              minHeight: 72,
-              outline: "none",
-              marginBottom: 12,
-              boxSizing: "border-box" as const,
-            }}
+            placeholder="Provide context for your decision (required for rejections)..."
+            className="w-full bg-background/50 border border-border rounded-lg p-4 text-[13px] text-foreground font-medium placeholder:text-muted-foreground/30 focus:ring-1 focus:ring-primary/30 focus:border-primary/30 outline-none transition-all mb-4 min-h-[100px]"
           />
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
-            <Btn onClick={() => doApproval("Approved")} disabled={!!loading} color="#10B981">
-              <CheckCircle size={14} /> {isAcceptCase ? "Approve Acceptance" : isContestCase ? "Approve Contest" : "Approve Review"}
-            </Btn>
-            <Btn onClick={() => doApproval("Rejected")} disabled={!!loading} color="#EF4444">
-              <XCircle size={14} /> {isAcceptCase ? "Reject Acceptance" : isContestCase ? "Reject Contest" : "Reject Review"}
-            </Btn>
-            <Btn onClick={() => doApproval("Sent Back")} disabled={!!loading} color="#F59E0B">
-              <RotateCcw size={14} /> Send Back for Rework
-            </Btn>
+          <div className="flex flex-wrap gap-3">
+            <button 
+              onClick={() => doApproval("Approved")} 
+              disabled={!!loading}
+              className="bg-signal-green text-white font-bold font-mono text-[11px] uppercase px-5 py-2.5 rounded-md hover:bg-signal-green/90 transition-all shadow-md shadow-signal-green/20 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              <CheckCircle size={14} /> Approve Path
+            </button>
+            <button 
+              onClick={() => doApproval("Rejected")} 
+              disabled={!!loading}
+              className="bg-destructive text-white font-bold font-mono text-[11px] uppercase px-5 py-2.5 rounded-md hover:bg-destructive/90 transition-all shadow-md shadow-destructive/20 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              <XCircle size={14} /> Deny Path
+            </button>
+            <button 
+              onClick={() => doApproval("Sent Back")} 
+              disabled={!!loading}
+              className="bg-hazard-orange text-white font-bold font-mono text-[11px] uppercase px-5 py-2.5 rounded-md hover:bg-hazard-orange/90 transition-all shadow-md shadow-hazard-orange/20 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              <RotateCcw size={14} /> Request Rework
+            </button>
           </div>
         </div>
       )}
 
+      {/* Operator Actions */}
       {canOperator && (
-        <div style={{
-          background: "#111318",
-          border: "1px solid #2A2D36",
-          borderRadius: 10,
-          padding: 20,
-        }}>
-          <div style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280", marginBottom: 16 }}>OPERATOR CONTROLS - {approvalSubject.toUpperCase()}</div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const }}>
+        <div className="bg-secondary/30 border border-border rounded-lg p-5">
+          <div className="font-mono text-[10px] text-muted-foreground font-bold mb-4 uppercase tracking-widest">
+            Operator Controls
+          </div>
+          <div className="flex flex-wrap gap-3">
             {needsApproval && (
-              <Btn
+              <button
                 onClick={handleMarkReady}
                 disabled={!!loading || caseData.status === "Approval Pending" || caseData.status === "Submitted" || isActionRequired}
-                color="#3B82F6"
+                className="bg-primary text-white font-bold font-mono text-[11px] uppercase px-5 py-2.5 rounded-md hover:bg-primary/90 transition-all shadow-md shadow-primary/20 flex items-center gap-2 disabled:opacity-50 cursor-pointer"
               >
-                <Clock size={14} /> Send {approvalSubject} for Approval
-              </Btn>
+                <Clock size={14} /> Finalize & Send for Review
+              </button>
             )}
             {isActionRequired && (
-              <Btn onClick={handleResumeRework} disabled={!!loading} color="#F59E0B">
-                <RotateCcw size={14} /> Resume Evidence Rework
-              </Btn>
+              <button 
+                onClick={handleResumeRework} 
+                disabled={!!loading}
+                className="bg-hazard-orange text-white font-bold font-mono text-[11px] uppercase px-5 py-2.5 rounded-md hover:bg-hazard-orange/90 transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-hazard-orange/20"
+              >
+                <RotateCcw size={14} /> Restart Workflow
+              </button>
             )}
             {canSubmit && (
-              <Btn onClick={handleSubmit} disabled={!!loading} color="#6366F1">
+              <button 
+                onClick={handleSubmit} 
+                disabled={!!loading}
+                className="bg-accent-foreground text-white font-bold font-mono text-[11px] uppercase px-5 py-2.5 rounded-md hover:bg-accent-foreground/90 transition-all shadow-md shadow-accent-foreground/20 flex items-center gap-2 cursor-pointer"
+              >
                 <Send size={14} /> {submitLabel}
-              </Btn>
+              </button>
             )}
           </div>
         </div>

@@ -1,15 +1,13 @@
 import { useState } from "react";
-import { RefreshCw, Save, FileText, Paperclip } from "lucide-react";
+import { RefreshCw, Save, FileText, Paperclip, AlertCircle } from "lucide-react";
 import backend from "~backend/client";
 import { useToast } from "@/components/ui/use-toast";
-import type { Draft } from "~backend/drafts/types";
 
-const MONO = "'IBM Plex Mono', monospace";
 const MAX_SUMMARY_LENGTH = 1000;
-const DRAFT_STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  draft: { bg: "rgba(59,130,246,0.1)", text: "#3B82F6", border: "rgba(59,130,246,0.25)" },
-  ready: { bg: "rgba(139,92,246,0.1)", text: "#8B5CF6", border: "rgba(139,92,246,0.25)" },
-  submitted: { bg: "rgba(16,185,129,0.12)", text: "#10B981", border: "rgba(16,185,129,0.28)" },
+const DRAFT_STATUS_COLORS: Record<string, string> = {
+  draft: "bg-primary/10 text-primary border-primary/20",
+  ready: "bg-accent-foreground/10 text-accent-foreground border-accent-foreground/20",
+  submitted: "bg-signal-green/10 text-signal-green border-signal-green/20",
 };
 
 interface Props {
@@ -27,14 +25,15 @@ export default function DraftEditor({ drafts, caseId, onRefresh }: Props) {
 
   const displayText = text ?? draft?.response_text ?? "";
   const summaryLength = draft?.summary_text.length ?? 0;
-  const summaryColors =
-    summaryLength >= MAX_SUMMARY_LENGTH
-      ? { text: "#EF4444", border: "rgba(239,68,68,0.25)" }
-      : summaryLength >= 900
-        ? { text: "#F59E0B", border: "rgba(245,158,11,0.25)" }
-        : { text: "#6B7280", border: "rgba(61,66,81,0.4)" };
+  
+  const getSummaryStyles = (len: number) => {
+    if (len >= MAX_SUMMARY_LENGTH) return "text-destructive border-destructive/30 bg-destructive/5";
+    if (len >= 900) return "text-hazard-orange border-hazard-orange/30 bg-hazard-orange/5";
+    return "text-muted-foreground border-border/50 bg-secondary/20";
+  };
+
   const draftStatus = draft?.draft_status ?? "draft";
-  const draftStatusColors = DRAFT_STATUS_COLORS[draftStatus] ?? DRAFT_STATUS_COLORS.draft;
+  const statusStyles = DRAFT_STATUS_COLORS[draftStatus] ?? DRAFT_STATUS_COLORS.draft;
 
   const handleSave = async () => {
     if (!draft) return;
@@ -70,171 +69,86 @@ export default function DraftEditor({ drafts, caseId, onRefresh }: Props) {
   const attachments = (draft?.attachments_json ?? []) as string[];
 
   return (
-    <div>
-      <div style={{
-        background: "#111318",
-        border: "1px solid #2A2D36",
-        borderRadius: 10,
-        overflow: "hidden",
-      }}>
+    <div className="animate-stagger">
+      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-lg flex flex-col h-[700px]">
         {/* Header */}
-        <div style={{
-          background: "#111318",
-          borderBottom: "1px solid #2A2D36",
-          padding: "12px 16px",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}>
-          <FileText size={13} color="#3B82F6" />
-          <span style={{ fontFamily: MONO, fontSize: 11, color: "#6B7280" }}>
-            BANK-FACING RESPONSE DRAFT
+        <div className="bg-secondary/30 border-b border-border p-4 flex items-center gap-4">
+          <FileText size={16} className="text-primary" />
+          <span className="font-mono text-[11px] text-foreground font-bold uppercase tracking-widest">
+            Dispute Response Architect
           </span>
           {draft && (
-            <>
-              <span style={{
-                fontFamily: MONO,
-                fontSize: 9,
-                color: "#3D4251",
-                background: "#1A1D24",
-                border: "1px solid #2A2D36",
-                borderRadius: 4,
-                padding: "2px 6px",
-              }}>
+            <div className="flex gap-2">
+              <span className="font-mono text-[9px] text-muted-foreground bg-background/50 border border-border px-1.5 py-0.5 rounded font-bold">
                 v{draft.version}
               </span>
-              <span style={{
-                fontFamily: MONO,
-                fontSize: 9,
-                color: draftStatusColors.text,
-                background: draftStatusColors.bg,
-                border: `1px solid ${draftStatusColors.border}`,
-                borderRadius: 4,
-                padding: "2px 6px",
-                textTransform: "uppercase",
-              }}>
+              <span className={`font-mono text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-widest ${statusStyles}`}>
                 {draftStatus}
               </span>
-            </>
+            </div>
           )}
-          <div style={{ flex: 1 }} />
+          <div className="flex-1" />
           <button
             onClick={handleRegenerate}
             disabled={regenerating}
-            style={{
-              background: "transparent",
-              border: "1px solid #2A2D36",
-              borderRadius: 6,
-              color: "#6B7280",
-              padding: "5px 10px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              fontSize: 11,
-              fontFamily: MONO,
-              opacity: regenerating ? 0.5 : 1,
-            }}
+            className="bg-transparent border border-border rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 transition-all flex items-center gap-2 text-[11px] font-bold font-mono uppercase cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw size={11} />
-            {regenerating ? "Regenerating..." : "Regenerate"}
+            <RefreshCw size={12} className={regenerating ? "animate-spin" : ""} />
+            {regenerating ? "Synthesizing..." : "Regenerate"}
           </button>
           {text !== null && (
             <button
               onClick={handleSave}
               disabled={saving}
-              style={{
-                background: "#3B82F6",
-                border: "none",
-                borderRadius: 6,
-                color: "#fff",
-                padding: "5px 12px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 11,
-                fontFamily: MONO,
-                opacity: saving ? 0.5 : 1,
-              }}
+              className="bg-primary text-white border-none rounded-md px-4 py-1.5 font-bold font-mono text-[11px] uppercase cursor-pointer flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50 shadow-md shadow-primary/20"
             >
-              <Save size={11} />
-              {saving ? "Saving..." : "Save"}
+              <Save size={12} />
+              {saving ? "Saving..." : "Commit Changes"}
             </button>
           )}
         </div>
 
         {draft?.summary_text && (
-          <div style={{
-            padding: "10px 16px",
-            background: "rgba(59,130,246,0.05)",
-            borderBottom: "1px solid rgba(59,130,246,0.1)",
-            fontSize: 11,
-            color: "#6B7280",
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 6 }}>
-              <span style={{ fontStyle: "italic" }}>{draft.summary_text}</span>
-              <span
-                style={{
-                  fontFamily: MONO,
-                  fontSize: 10,
-                  color: summaryColors.text,
-                  border: `1px solid ${summaryColors.border}`,
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                SUMMARY {summaryLength}/{MAX_SUMMARY_LENGTH}
+          <div className="p-4 bg-primary/5 border-b border-primary/10">
+            <div className="flex justify-between items-start gap-6 mb-3">
+              <p className="m-0 text-[13px] text-foreground/80 leading-relaxed font-medium italic">
+                "{draft.summary_text}"
+              </p>
+              <span className={`font-mono text-[10px] font-bold px-2.5 py-1 rounded border whitespace-nowrap uppercase tracking-widest shadow-sm ${getSummaryStyles(summaryLength)}`}>
+                {summaryLength} / {MAX_SUMMARY_LENGTH}
               </span>
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: "#3D4251" }}>
-              Razorpay contest summaries are capped at 1000 characters.
+            <div className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground/60">
+              <AlertCircle size={12} />
+              Razorpay system limits contest summaries to 1,000 characters.
             </div>
           </div>
         )}
 
         {/* Editor */}
-        <textarea
-          value={displayText}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="No draft generated yet. Run the agent or click Regenerate."
-          style={{
-            width: "100%",
-            minHeight: 380,
-            background: "#0A0C10",
-            border: "none",
-            color: "#E8EAF0",
-            fontFamily: MONO,
-            fontSize: 12,
-            lineHeight: 1.7,
-            padding: 20,
-            resize: "vertical",
-            outline: "none",
-            boxSizing: "border-box",
-          }}
-        />
+        <div className="flex-1 relative bg-background/30 group">
+          <textarea
+            value={displayText}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Awaiting agent response synthesis..."
+            className="w-full h-full bg-transparent border-none text-foreground font-mono text-[13px] leading-relaxed p-6 resize-none outline-none focus:ring-0 placeholder:text-muted-foreground/20"
+          />
+          <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="bg-card/80 backdrop-blur-md border border-border px-3 py-1.5 rounded-full text-[10px] font-mono text-muted-foreground font-bold shadow-xl">
+              EDITOR MODE
+            </div>
+          </div>
+        </div>
 
         {/* Attachments */}
         {attachments.length > 0 && (
-          <div style={{
-            padding: "12px 16px",
-            borderTop: "1px solid #2A2D36",
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 6,
-          }}>
-            <Paperclip size={11} color="#6B7280" style={{ marginTop: 2 }} />
+          <div className="p-4 border-t border-border bg-secondary/10 flex flex-wrap gap-2.5 items-center">
+            <div className="flex items-center gap-2 mr-2">
+              <Paperclip size={14} className="text-muted-foreground/50" />
+              <span className="text-[10px] font-mono font-bold text-muted-foreground/40 uppercase tracking-widest">Linked Assets:</span>
+            </div>
             {attachments.map((a, i) => (
-              <span key={i} style={{
-                fontFamily: MONO,
-                fontSize: 9,
-                color: "#3B82F6",
-                background: "rgba(59,130,246,0.1)",
-                border: "1px solid rgba(59,130,246,0.2)",
-                borderRadius: 4,
-                padding: "2px 8px",
-              }}>
+              <span key={i} className="font-mono text-[10px] text-primary font-bold bg-primary/10 border border-primary/20 rounded-full px-3 py-1 hover:bg-primary/20 transition-colors cursor-default">
                 {a}
               </span>
             ))}

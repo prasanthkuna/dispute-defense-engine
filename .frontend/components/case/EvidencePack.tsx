@@ -1,12 +1,9 @@
-import { FileText, Database, Globe } from "lucide-react";
-import type { EvidenceItem } from "~backend/evidence/types";
+import { FileText, Database, Shield } from "lucide-react";
 
-const MONO = "'IBM Plex Mono', monospace";
-
-const STATUS_COLORS: Record<string, { text: string; border: string }> = {
-  found: { text: "#10B981", border: "rgba(16,185,129,0.2)" },
-  partial: { text: "#F59E0B", border: "rgba(245,158,11,0.2)" },
-  missing: { text: "#EF4444", border: "rgba(239,68,68,0.2)" },
+const STATUS_COLORS: Record<string, { text: string; border: string; bg: string }> = {
+  found: { text: "text-signal-green", border: "border-signal-green/20", bg: "bg-signal-green/5" },
+  partial: { text: "text-hazard-orange", border: "border-hazard-orange/20", bg: "bg-hazard-orange/5" },
+  missing: { text: "text-destructive", border: "border-destructive/20", bg: "bg-destructive/5" },
 };
 
 interface Props {
@@ -15,73 +12,72 @@ interface Props {
 
 export default function EvidencePack({ evidence }: Props) {
   return (
-    <div>
-      <h3 style={{ margin: "0 0 16px", fontSize: 12, fontFamily: MONO, color: "#6B7280", fontWeight: 600, letterSpacing: "0.1em" }}>
-        EVIDENCE PACK - {evidence.length} ITEMS
-      </h3>
+    <div className="animate-stagger">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="m-0 text-[10px] font-mono text-muted-foreground font-bold tracking-widest uppercase">
+          EVIDENCE PACK TELEMETRY
+        </h3>
+        <span className="bg-primary/10 text-primary text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-primary/20">
+          {evidence.length} OBJECTS
+        </span>
+      </div>
+
       {evidence.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", fontFamily: MONO, color: "#3D4251", fontSize: 12,
-          background: "#111318", border: "1px solid #2A2D36", borderRadius: 10 }}>
-          No evidence collected yet.
+        <div className="p-20 text-center flex flex-col items-center gap-4 bg-card border border-border rounded-lg shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-secondary/30 flex items-center justify-center">
+            <FileText size={20} className="text-muted-foreground/30" />
+          </div>
+          <div className="font-mono text-[11px] text-muted-foreground font-medium uppercase tracking-widest">
+            No evidence objects detected
+          </div>
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 10 }}>
+        <div className="grid gap-3">
           {evidence.map((item) => {
-            const colors = STATUS_COLORS[item.status] ?? STATUS_COLORS.missing;
+            const styles = STATUS_COLORS[item.status] ?? STATUS_COLORS.missing;
             return (
-              <div key={item.id} style={{
-                background: "#111318",
-                border: `1px solid #2A2D36`,
-                borderLeft: `3px solid ${colors.text}`,
-                borderRadius: 10,
-                padding: 16,
-              }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <FileText size={16} color={colors.text} style={{ flexShrink: 0, marginTop: 2 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "#E8EAF0" }}>{item.title}</span>
-                      <span style={{
-                        fontFamily: MONO,
-                        fontSize: 9,
-                        color: colors.text,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: 4,
-                        padding: "1px 6px",
-                      }}>
-                        {item.status.toUpperCase()}
+              <div 
+                key={item.id} 
+                className={`bg-card border border-border rounded-lg p-5 shadow-sm transition-all hover:border-primary/30 group relative overflow-hidden`}
+              >
+                <div className={`absolute top-0 left-0 w-1 h-full ${styles.text.replace("text-", "bg-")}`} />
+                
+                <div className="flex items-start gap-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${styles.bg}`}>
+                    <FileText size={18} className={styles.text} />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                      <span className="font-display text-[15px] font-bold text-foreground leading-tight">{item.title}</span>
+                      <span className={`font-mono text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-widest ${styles.text} ${styles.border} ${styles.bg}`}>
+                        {item.status}
                       </span>
                     </div>
-                    <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 10, color: "#6B7280", display: "flex", alignItems: "center", gap: 3 }}>
-                        <Database size={9} />
-                        {item.source_name}
-                      </span>
-                      <span style={{ fontFamily: MONO, fontSize: 9, color: "#3D4251" }}>
-                        {item.evidence_type}
-                      </span>
-                      <span style={{ fontFamily: MONO, fontSize: 9, color: "#3B82F6" }}>
-                        {item.purpose}
-                      </span>
+
+                    <div className="flex gap-x-4 gap-y-1.5 mb-3 flex-wrap">
+                      <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
+                        <Database size={10} className="opacity-40" />
+                        <span className="font-bold uppercase tracking-tight text-foreground/60">{item.source_name}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground">
+                        <Shield size={10} className="opacity-40" />
+                        <span className="font-bold uppercase tracking-tight text-primary/70">{item.purpose}</span>
+                      </div>
                       {item.confidence < 1 && (
-                        <span style={{ fontFamily: MONO, fontSize: 9, color: "#F59E0B" }}>
-                          {Math.round(item.confidence * 100)}% confidence
-                        </span>
+                        <div className="flex items-center gap-1.5 font-mono text-[10px] text-hazard-orange font-bold uppercase tracking-tighter">
+                          {Math.round(item.confidence * 100)}% Match
+                        </div>
                       )}
                     </div>
-                    <p style={{ margin: 0, fontSize: 12, color: "#6B7280", lineHeight: 1.5 }}>
+
+                    <p className="m-0 text-[13px] text-foreground/80 leading-relaxed mb-4">
                       {item.summary_text}
                     </p>
+
                     {item.preview_text && (
-                      <div style={{
-                        marginTop: 8,
-                        background: "#0A0C10",
-                        borderRadius: 6,
-                        padding: "6px 10px",
-                        fontFamily: MONO,
-                        fontSize: 10,
-                        color: "#3B82F6",
-                      }}>
+                      <div className="bg-secondary/30 border border-border/50 rounded-md p-3 font-mono text-[11px] text-primary leading-snug break-all overflow-wrap-anywhere italic shadow-inner">
+                        <span className="text-muted-foreground/40 mr-2 not-italic font-bold">RAW:</span>
                         {item.preview_text}
                       </div>
                     )}
@@ -95,4 +91,3 @@ export default function EvidencePack({ evidence }: Props) {
     </div>
   );
 }
-

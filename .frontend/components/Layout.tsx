@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from "react-router-dom";
-import { Inbox, Shield, LayoutDashboard } from "lucide-react";
+import { Inbox, Shield, LayoutDashboard, Database, Activity } from "lucide-react";
 import RoleSwitcher from "./RoleSwitcher";
 
 const navItems = [
@@ -17,115 +17,97 @@ export default function Layout() {
   const location = useLocation();
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", position: "relative" }}>
-      <div className="scanlines" />
-      {/* Sidebar */}
-      <aside style={{
-        width: 240,
-        background: "#08090C",
-        borderRight: "1px solid rgba(255,255,255,0.08)",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-        zIndex: 10,
-      }}>
-        {/* Logo */}
-        <div style={{
-          padding: "24px 20px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}>
-          <div style={{
-            background: "#3B82F6",
-            borderRadius: 6,
-            width: 32,
-            height: 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 0 15px rgba(59,130,246,0.3)",
-          }}>
-            <Shield size={16} color="#fff" />
+    <div className="flex h-screen overflow-hidden bg-background text-foreground relative font-sans">
+      {/* Sidebar - Premium Razorpay Aesthetic */}
+      <aside className="w-64 bg-secondary border-r border-border flex flex-col shrink-0 z-20 transition-all duration-500 shadow-[20px_0_40px_-20px_rgba(0,0,0,0.5)]">
+        {/* Logo Section */}
+        <div className="p-8 border-b border-border/40 flex items-center gap-4 group cursor-pointer">
+          <div className="bg-primary rounded-lg w-10 h-10 flex items-center justify-center shadow-[0_0_20px_rgba(19,100,241,0.3)] group-hover:scale-110 transition-transform duration-300">
+            <Shield size={20} className="text-primary-foreground" />
           </div>
-          <div>
-            <div style={{
-              fontFamily: "'Space Mono', monospace",
-              fontWeight: 700,
-              fontSize: 15,
-              color: "#F1F4F9",
-              letterSpacing: "-0.01em",
-            }}>RAZOR.DEFENSE</div>
-            <div style={{ fontSize: 9, color: "#4B5563", marginTop: 1, letterSpacing: "0.05em", fontWeight: 600 }}>FINTECH INTELLIGENCE</div>
+          <div className="transition-all duration-300 group-hover:translate-x-1">
+            <div className="font-display font-bold text-[16px] text-foreground tracking-tight leading-none">RAZOR.DEFENSE</div>
+            <div className="text-[8px] text-primary mt-1.5 tracking-[0.25em] font-bold uppercase opacity-60">Fintech Intelligence</div>
           </div>
         </div>
 
-        {/* Nav */}
-        <nav style={{ padding: "16px 12px", flex: 1 }}>
+        {/* Navigation */}
+        <nav className="p-5 flex-1 space-y-2">
+          <div className="text-[9px] font-mono text-muted-foreground/30 font-bold tracking-[0.2em] uppercase mb-4 px-3">Main Protocols</div>
           {navItems.map(({ to, label, icon: Icon, end, matches }) => {
             const isActive = matches(location.pathname);
 
             return (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              style={() => ({
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "10px 14px",
-                borderRadius: 6,
-                marginBottom: 4,
-                textDecoration: "none",
-                background: isActive ? "rgba(59,130,246,0.12)" : "transparent",
-                color: isActive ? "#3B82F6" : "#6B7280",
-                fontSize: 13,
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 600,
-                transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                border: isActive ? "1px solid rgba(59,130,246,0.2)" : "1px solid transparent",
-              })}
-            >
-              <Icon size={14} />
-              {label}
-            </NavLink>
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={() => `
+                  flex items-center gap-3.5 px-4 py-3 rounded-lg no-underline transition-all duration-300 font-bold text-[13px] group
+                  ${isActive 
+                    ? "bg-primary/10 text-primary border border-primary/20 shadow-sm" 
+                    : "text-muted-foreground/60 hover:bg-white/5 hover:text-foreground border border-transparent"}
+                `}
+              >
+                <Icon size={18} className={`transition-colors duration-300 ${isActive ? "text-primary" : "text-muted-foreground/30 group-hover:text-muted-foreground"}`} />
+                {label}
+              </NavLink>
             );
           })}
         </nav>
 
-        {/* Version */}
-        <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 9, color: "#374151" }}>
-            ENGINE_STATUS: ONLINE / V1.0.0
+        {/* Footer Info */}
+        <div className="p-6 border-t border-border/40 bg-secondary/30">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-signal-green animate-pulse" />
+            <span className="font-mono text-[9px] text-muted-foreground/60 uppercase font-bold tracking-widest">Core Engine: Optimal</span>
+          </div>
+          <div className="font-mono text-[8px] text-muted-foreground/30 uppercase tracking-[0.2em]">
+            Protocol Build v1.4.2-STABLE
           </div>
         </div>
       </aside>
 
-      {/* Main */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-        {/* Topbar */}
-        <header style={{
-          height: 56,
-          background: "#08090C",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 28px",
-          flexShrink: 0,
-        }}>
-          <div style={{ fontSize: 10, color: "#4B5563", fontFamily: "'Space Mono', monospace", fontWeight: 500, letterSpacing: "0.02em" }}>
-            [ SYSTEM.STATUS: OPTIMAL ] SECURE_ENCRYPTION_ACTIVE
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Global Topbar */}
+        <header className="h-16 bg-background border-b border-border/50 flex items-center justify-between px-10 shrink-0 z-10">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-full border border-border/50">
+              <Activity size={12} className="text-primary" />
+              <span className="text-[10px] font-mono text-foreground/70 font-bold tracking-tight uppercase">Security Sync Active</span>
+            </div>
+            <div className="h-4 w-px bg-border/50" />
+            <div className="text-[10px] text-muted-foreground/40 font-mono font-bold uppercase tracking-widest">
+              Location: <span className="text-foreground/60">{location.pathname === "/" ? "HQ_COMMAND" : "LEDGER_VIEW"}</span>
+            </div>
           </div>
-          <RoleSwitcher />
+          <div className="flex items-center gap-8">
+            <RoleSwitcher />
+            <div className="h-8 w-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary font-bold text-[10px]">
+              PK
+            </div>
+          </div>
         </header>
 
-        {/* Content */}
-        <main style={{ flex: 1, overflow: "auto", position: "relative" }}>
-          <div style={{ position: "absolute", inset: 0, opacity: 0.4, pointerEvents: "none", backgroundImage: "radial-gradient(circle at 2px 2px, rgba(255,255,255,0.02) 1px, transparent 0)", backgroundSize: "24px 24px" }} />
-          <Outlet />
+        {/* Content Container with Grid Overlay */}
+        <main className="flex-1 overflow-auto relative bg-background">
+          {/* Enhanced Grid Pattern */}
+          <div 
+            className="absolute inset-0 opacity-[0.02] pointer-events-none" 
+            style={{ 
+              backgroundImage: `
+                linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: "40px 40px" 
+            }} 
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="relative z-10 h-full">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

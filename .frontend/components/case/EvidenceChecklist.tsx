@@ -1,5 +1,4 @@
 import { CheckCircle, XCircle, MinusCircle } from "lucide-react";
-const MONO = "'IBM Plex Mono', monospace";
 
 const EVIDENCE_LABELS: Record<string, string> = {
   payment_record: "Payment Record",
@@ -31,7 +30,18 @@ interface Props {
 
 export default function EvidenceChecklist({ evidence, score }: Props) {
   const scorePercent = Math.round(score * 100);
-  const scoreColor = scorePercent >= 80 ? "#10B981" : scorePercent >= 50 ? "#F59E0B" : "#EF4444";
+  
+  const getScoreColor = (p: number) => {
+    if (p >= 80) return "text-signal-green";
+    if (p >= 50) return "text-hazard-orange";
+    return "text-destructive";
+  };
+
+  const getScoreBg = (p: number) => {
+    if (p >= 80) return "bg-signal-green";
+    if (p >= 50) return "bg-hazard-orange";
+    return "bg-destructive";
+  };
 
   const byType: Record<string, any> = {};
   for (const item of evidence) {
@@ -39,74 +49,85 @@ export default function EvidenceChecklist({ evidence, score }: Props) {
   }
 
   return (
-    <div style={{
-      background: "#111318",
-      border: "1px solid #2A2D36",
-      borderRadius: 10,
-      padding: 20,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <h3 style={{ margin: 0, fontSize: 12, fontFamily: MONO, color: "#6B7280", fontWeight: 600, letterSpacing: "0.1em" }}>
+    <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="m-0 text-[10px] font-mono text-muted-foreground font-bold tracking-widest uppercase">
           EVIDENCE CHECKLIST
         </h3>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 120, height: 6, background: "#1A1D24", borderRadius: 3, overflow: "hidden" }}>
-            <div style={{ width: `${scorePercent}%`, height: "100%", background: scoreColor, transition: "width 0.5s", borderRadius: 3 }} />
+        <div className="flex items-center gap-4">
+          <div className="w-32 h-1.5 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-700 rounded-full ${getScoreBg(scorePercent)}`}
+              style={{ width: `${scorePercent}%` }}
+            />
           </div>
-          <span style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, color: scoreColor }}>
+          <span className={`font-mono text-xl font-bold tracking-tighter ${getScoreColor(scorePercent)}`}>
             {scorePercent}%
           </span>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 8 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {ALL_TYPES.map((type) => {
           const item = byType[type];
           const status = item?.status ?? "missing";
 
-          let icon, iconColor;
-          if (status === "found") {
-            icon = <CheckCircle size={14} />;
-            iconColor = "#10B981";
-          } else if (status === "partial") {
-            icon = <MinusCircle size={14} />;
-            iconColor = "#F59E0B";
-          } else {
-            icon = <XCircle size={14} />;
-            iconColor = "#EF4444";
-          }
+          const getStatusStyles = (s: string) => {
+            switch (s) {
+              case "found":
+                return {
+                  icon: <CheckCircle size={14} />,
+                  text: "text-signal-green",
+                  border: "border-signal-green/20",
+                  bg: "bg-signal-green/5"
+                };
+              case "partial":
+                return {
+                  icon: <MinusCircle size={14} />,
+                  text: "text-hazard-orange",
+                  border: "border-hazard-orange/20",
+                  bg: "bg-hazard-orange/5"
+                };
+              default:
+                return {
+                  icon: <XCircle size={14} />,
+                  text: "text-destructive",
+                  border: "border-border/50",
+                  bg: "bg-secondary/20"
+                };
+            }
+          };
+
+          const styles = getStatusStyles(status);
 
           return (
-            <div key={type} style={{
-              background: "#0A0C10",
-              border: `1px solid ${status === "found" ? "rgba(16,185,129,0.15)" : status === "partial" ? "rgba(245,158,11,0.15)" : "#1A1D24"}`,
-              borderRadius: 8,
-              padding: "10px 12px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 10,
-            }}>
-              <span style={{ color: iconColor, paddingTop: 1, flexShrink: 0 }}>{icon}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: "#E8EAF0", marginBottom: 2 }}>
+            <div 
+              key={type} 
+              className={`border rounded-md p-3.5 flex items-start gap-3 transition-all duration-200 ${styles.border} ${styles.bg} hover:shadow-md`}
+            >
+              <span className={`shrink-0 mt-0.5 ${styles.text}`}>{styles.icon}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-[12px] font-bold text-foreground leading-tight mb-1">
                   {EVIDENCE_LABELS[type] ?? type}
                 </div>
                 {item ? (
-                  <>
-                    <div style={{ fontSize: 10, color: "#6B7280", fontFamily: MONO, marginBottom: 2 }}>
+                  <div className="space-y-1">
+                    <div className="text-[9px] font-mono text-muted-foreground font-bold uppercase tracking-tight">
                       {item.source_name}
                     </div>
-                    <div style={{ fontSize: 10, color: "#6B7280", lineHeight: 1.4 }}>
+                    <div className="text-[10px] text-muted-foreground/80 leading-normal line-clamp-2 italic">
                       {item.preview_text}
                     </div>
                     {item.confidence < 1 && (
-                      <div style={{ fontSize: 9, fontFamily: MONO, color: "#F59E0B", marginTop: 3 }}>
-                        CONFIDENCE: {Math.round(item.confidence * 100)}%
+                      <div className="text-[9px] font-mono font-bold text-hazard-orange mt-1.5 uppercase">
+                        Confidence: {Math.round(item.confidence * 100)}%
                       </div>
                     )}
-                  </>
+                  </div>
                 ) : (
-                  <div style={{ fontSize: 10, color: "#3D4251", fontFamily: MONO }}>not collected</div>
+                  <div className="text-[10px] font-mono text-muted-foreground/40 font-medium uppercase tracking-widest">
+                    Missing
+                  </div>
                 )}
               </div>
             </div>
