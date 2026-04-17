@@ -172,7 +172,7 @@ export default function DashboardPage() {
           gridTemplateColumns: "1.5fr 1fr",
           gap: 24,
           marginBottom: 24,
-          alignItems: "stretch",
+          alignItems: "start",
         }}
       >
         <div
@@ -183,76 +183,84 @@ export default function DashboardPage() {
             padding: 28,
             position: "relative",
             overflow: "hidden",
+            minHeight: 420,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <ShieldCheck size={16} color="#3B82F6" />
-            <span style={{ fontFamily: MONO, fontSize: 11, color: "#3B82F6", letterSpacing: "0.08em" }}>RAZORPAY DEMO CONSOLE</span>
-          </div>
-          <h1 style={{ margin: 0, fontFamily: SYNE, fontSize: 52, lineHeight: 1, color: "#F1F4F9" }}>
-            Dispute Ops
-            <br />
-            Command View
-          </h1>
-          <p style={{ margin: "16px 0 0", maxWidth: 700, color: "#9CA3AF", fontSize: 15, lineHeight: 1.6 }}>
-            {summaryLine}
-          </p>
-
-          <div style={{ display: "flex", gap: 12, marginTop: 24, flexWrap: "wrap" }}>
-            <button
-              onClick={seedScenarios}
-              disabled={isSeeding || hasSeededCases}
-              style={{
-                background: "#3B82F6",
-                border: "none",
-                color: "#fff",
-                borderRadius: 8,
-                padding: "12px 18px",
-                fontFamily: MONO,
-                fontSize: 11,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                cursor: isSeeding ? "wait" : hasSeededCases ? "not-allowed" : "pointer",
-                opacity: hasSeededCases ? 0.55 : 1,
-              }}
-            >
-              {isSeeding ? <Loader2 size={14} className="animate-spin" /> : <WandSparkles size={14} />}
-              {isSeeding ? "Seeding demo cases..." : hasSeededCases ? "Demo disputes already seeded" : "Seed 4 demo disputes"}
-            </button>
-
-            <button
-              onClick={resetEnvironment}
-              disabled={isResetting}
-              style={{
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.12)",
-                color: "#E8EAF0",
-                borderRadius: 8,
-                padding: "12px 18px",
-                fontFamily: MONO,
-                fontSize: 11,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                cursor: isResetting ? "wait" : "pointer",
-              }}
-            >
-              <RefreshCw size={14} className={isResetting ? "animate-spin" : ""} />
-              {isResetting ? "Resetting..." : "Clear environment"}
-            </button>
-          </div>
-
-          <div style={{ display: "flex", gap: 18, marginTop: 28, flexWrap: "wrap" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6B7280", fontSize: 12 }}>
-              <Bot size={14} color="#8B5CF6" />
-              Agent trace + policy engine
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <ShieldCheck size={16} color="#3B82F6" />
+              <span style={{ fontFamily: MONO, fontSize: 11, color: "#3B82F6", letterSpacing: "0.08em" }}>RAZORPAY DEMO CONSOLE</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6B7280", fontSize: 12 }}>
-              <CheckCircle2 size={14} color="#10B981" />
-              Editable draft + approval routing
+            <h1 style={{ margin: 0, fontFamily: SYNE, fontSize: 52, lineHeight: 1, color: "#F1F4F9" }}>
+              Dispute Ops
+              <br />
+              Command View
+            </h1>
+            <p style={{ margin: "16px 0 0", maxWidth: 700, color: "#9CA3AF", fontSize: 15, lineHeight: 1.6 }}>
+              {summaryLine}
+            </p>
+          </div>
+
+          <div style={{ marginTop: 24 }}>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <button
+                onClick={seedScenarios}
+                disabled={isSeeding || hasSeededCases}
+                style={{
+                  background: "#3B82F6",
+                  border: "none",
+                  color: "#fff",
+                  borderRadius: 8,
+                  padding: "12px 18px",
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  cursor: isSeeding ? "wait" : hasSeededCases ? "not-allowed" : "pointer",
+                  opacity: hasSeededCases ? 0.55 : 1,
+                }}
+              >
+                {isSeeding ? <Loader2 size={14} className="animate-spin" /> : <WandSparkles size={14} />}
+                {isSeeding ? "Seeding demo cases..." : hasSeededCases ? "Demo disputes already seeded" : "Seed 4 demo disputes"}
+              </button>
+
+              <button
+                onClick={resetEnvironment}
+                disabled={isResetting}
+                style={{
+                  background: "transparent",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: "#E8EAF0",
+                  borderRadius: 8,
+                  padding: "12px 18px",
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  cursor: isResetting ? "wait" : "pointer",
+                }}
+              >
+                <RefreshCw size={14} className={isResetting ? "animate-spin" : ""} />
+                {isResetting ? "Resetting..." : "Clear environment"}
+              </button>
+            </div>
+
+            <div style={{ display: "flex", gap: 18, marginTop: 22, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6B7280", fontSize: 12 }}>
+                <Bot size={14} color="#8B5CF6" />
+                Agent trace + policy engine
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6B7280", fontSize: 12 }}>
+                <CheckCircle2 size={14} color="#10B981" />
+                Editable draft + approval routing
+              </div>
             </div>
           </div>
         </div>
@@ -263,6 +271,10 @@ export default function DashboardPage() {
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 14,
             padding: 24,
+            height: 420,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
@@ -275,7 +287,16 @@ export default function DashboardPage() {
               No disputes ingested yet. Use the demo seed to create four realistic intake events without asking the reviewer to wire a live webhook.
             </div>
           ) : (
-            <div style={{ display: "grid", gap: 12 }}>
+            <div
+              style={{
+                display: "grid",
+                gap: 12,
+                overflowY: "auto",
+                paddingRight: 6,
+                minHeight: 0,
+                flex: 1,
+              }}
+            >
               {events.slice(0, 5).map((event) => {
                 const dispute = getDisputePayload(event.payload_json);
                 const merchantName = dispute?.merchant_name ?? "Merchant of record unavailable";
