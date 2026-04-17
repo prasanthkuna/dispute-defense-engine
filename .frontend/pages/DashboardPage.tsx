@@ -25,6 +25,17 @@ const MONO = "'Space Mono', monospace";
 const SYNE = "'Syne', sans-serif";
 const CASE_MONO = "'IBM Plex Mono', monospace";
 
+function getDisputePayload(payload: unknown): Record<string, any> | null {
+  if (!payload) return null;
+
+  try {
+    const parsed = typeof payload === "string" ? JSON.parse(payload) : payload;
+    return (parsed as any)?.dispute ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function MetricCard({
   label,
   value,
@@ -265,26 +276,109 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div style={{ display: "grid", gap: 12 }}>
-              {events.slice(0, 5).map((event) => (
-                <div
-                  key={event.id}
-                  style={{
-                    background: "#0A0C10",
-                    border: "1px solid #2A2D36",
-                    borderRadius: 10,
-                    padding: 14,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                    <span style={{ fontFamily: MONO, fontSize: 11, color: "#E8EAF0" }}>{event.event_type}</span>
-                    <span style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280" }}>{formatDateTime(event.processed_at)}</span>
+              {events.slice(0, 5).map((event) => {
+                const dispute = getDisputePayload(event.payload_json);
+                const merchantName = dispute?.merchant_name ?? "Merchant of record unavailable";
+                const paymentId = dispute?.payment_id ?? "Payment id unavailable";
+                const phase = dispute?.phase ? String(dispute.phase).replace(/_/g, " ").toUpperCase() : "PHASE UNKNOWN";
+                const status = dispute?.status ? String(dispute.status).replace(/_/g, " ").toUpperCase() : "STATUS UNKNOWN";
+                const merchantReference = dispute?.merchant_reference ? String(dispute.merchant_reference).toUpperCase() : null;
+                const amount =
+                  typeof dispute?.amount === "number" ? formatCurrency(dispute.amount / 100, dispute.currency ?? "INR") : null;
+
+                return (
+                  <div
+                    key={event.id}
+                    style={{
+                      background: "linear-gradient(180deg, rgba(10,12,16,0.98) 0%, rgba(14,17,24,0.95) 100%)",
+                      border: "1px solid #2A2D36",
+                      borderRadius: 10,
+                      padding: 14,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 11, color: "#E8EAF0" }}>{event.event_type}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 10, color: "#6B7280" }}>{formatDateTime(event.processed_at)}</span>
+                    </div>
+
+                    <div style={{ fontFamily: MONO, fontSize: 10, color: "#3B82F6", marginBottom: 6 }}>
+                      {dispute?.id ?? event.external_event_id}
+                    </div>
+
+                    <div style={{ fontSize: 13, color: "#E8EAF0", lineHeight: 1.5, marginBottom: 10 }}>{merchantName}</div>
+
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <span
+                        style={{
+                          fontFamily: MONO,
+                          fontSize: 10,
+                          color: "#9CA3AF",
+                          border: "1px solid rgba(59,130,246,0.2)",
+                          borderRadius: 999,
+                          padding: "4px 8px",
+                          background: "rgba(59,130,246,0.06)",
+                        }}
+                      >
+                        PAYMENT {paymentId}
+                      </span>
+                      {merchantReference ? (
+                        <span
+                          style={{
+                            fontFamily: MONO,
+                            fontSize: 10,
+                            color: "#9CA3AF",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: 999,
+                            padding: "4px 8px",
+                          }}
+                        >
+                          REF {merchantReference}
+                        </span>
+                      ) : null}
+                      <span
+                        style={{
+                          fontFamily: MONO,
+                          fontSize: 10,
+                          color: "#9CA3AF",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 999,
+                          padding: "4px 8px",
+                        }}
+                      >
+                        {phase}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: MONO,
+                          fontSize: 10,
+                          color: "#9CA3AF",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          borderRadius: 999,
+                          padding: "4px 8px",
+                        }}
+                      >
+                        {status}
+                      </span>
+                      {amount ? (
+                        <span
+                          style={{
+                            fontFamily: MONO,
+                            fontSize: 10,
+                            color: "#10B981",
+                            border: "1px solid rgba(16,185,129,0.2)",
+                            borderRadius: 999,
+                            padding: "4px 8px",
+                            background: "rgba(16,185,129,0.06)",
+                          }}
+                        >
+                          {amount}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
-                  <div style={{ fontFamily: MONO, fontSize: 10, color: "#3B82F6", marginBottom: 4 }}>{event.external_event_id}</div>
-                  <div style={{ fontSize: 12, color: "#9CA3AF", lineHeight: 1.5 }}>
-                    {(event.payload_json as any)?.dispute?.merchant_name ?? "Merchant"} • {(event.payload_json as any)?.dispute?.payment_id ?? "Payment pending"}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

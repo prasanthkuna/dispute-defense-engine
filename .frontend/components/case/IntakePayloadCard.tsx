@@ -7,6 +7,16 @@ interface Props {
   events: any[];
 }
 
+function normalizePayload(payload: unknown) {
+  if (!payload) return null;
+
+  try {
+    return typeof payload === "string" ? JSON.parse(payload) : payload;
+  } catch {
+    return payload;
+  }
+}
+
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div
@@ -38,6 +48,7 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 
 export default function IntakePayloadCard({ caseData, events }: Props) {
   const event = events[0] ?? null;
+  const normalizedPayload = normalizePayload(event?.payload_json);
 
   return (
     <div
@@ -111,7 +122,7 @@ export default function IntakePayloadCard({ caseData, events }: Props) {
                   overflowWrap: "anywhere",
                 }}
               >
-                {JSON.stringify(event.payload_json, null, 2)}
+                {JSON.stringify(normalizedPayload, null, 2)}
               </pre>
             </>
           )}

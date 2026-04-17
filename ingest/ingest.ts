@@ -83,7 +83,7 @@ export const ingestEvent = api<IngestEventParams, IngestEventResponse>(
         reason_code, respond_by, status, external_status, phase, network, amount_deducted,
         approval_state, last_webhook_at, rework_reason, updated_at
       ) VALUES (
-        ${crypto.randomUUID()}, ${dispute.id}, ${dispute.payment_id}, ${dispute.merchant_name ?? "Demo Merchant"},
+        ${crypto.randomUUID()}, ${dispute.id}, ${dispute.payment_id}, ${dispute.merchant_name ?? "Merchant of record unavailable"},
         ${dispute.amount / 100}, ${dispute.currency},
         ${dispute.reason_code}, ${respondByDate}, ${internalStatus}, ${dispute.status}, ${dispute.phase}, ${dispute.network ?? null},
         ${dispute.amount_deducted / 100},

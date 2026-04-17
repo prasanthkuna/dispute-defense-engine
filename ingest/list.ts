@@ -10,6 +10,13 @@ interface ListEventsResponse {
   events: IngestedEvent[];
 }
 
+function parseEventRow(row: IngestedEvent): IngestedEvent {
+  return {
+    ...row,
+    payload_json: typeof row.payload_json === "string" ? JSON.parse(row.payload_json) : row.payload_json,
+  };
+}
+
 // Returns recent webhook events, optionally filtered to a single case.
 export const list = api<ListEventsParams, ListEventsResponse>(
   { expose: true, method: "GET", path: "/ingest/events" },
@@ -28,6 +35,6 @@ export const list = api<ListEventsParams, ListEventsResponse>(
     query += ` ORDER BY processed_at DESC NULLS LAST LIMIT 50`;
 
     const rows = await db.rawQueryAll<IngestedEvent>(query, ...values);
-    return { events: rows };
+    return { events: rows.map(parseEventRow) };
   }
 );
