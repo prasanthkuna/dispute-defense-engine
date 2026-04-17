@@ -1,4 +1,12 @@
 import type { DisputePhase } from "../cases/types";
+import type { RazorpayDisputeEventType } from "../ingest/types";
+
+export interface ScenarioLifecycleEvent {
+  event_type: RazorpayDisputeEventType;
+  external_status: string;
+  amount_deducted?: number;
+  action_required_reason?: string;
+}
 
 export interface ScenarioDefinition {
   type: "slam_dunk_contest" | "vernacular_evidence_contest" | "rto_accept" | "weak_evidence_escalate";
@@ -18,6 +26,8 @@ export interface ScenarioDefinition {
   expected_confidence: "High" | "Medium" | "Low";
   evidence_score: number;
   highlights: string[];
+  payment_method: "upi" | "netbanking" | "card";
+  lifecycle_events?: ScenarioLifecycleEvent[];
 }
 
 export const SCENARIOS: ScenarioDefinition[] = [
@@ -26,26 +36,27 @@ export const SCENARIOS: ScenarioDefinition[] = [
     label: "Delivered Order Counter-Dispute",
     merchant_name: "Urban Cart",
     amount: 2499,
-    amount_deducted: 2499,
+    amount_deducted: 0,
     payment_id: "pay_abc123",
     reason_code: "products_not_received",
     phase: "chargeback",
-    external_status: "needs_response",
+    external_status: "open",
     network: "UPI",
     merchant_reference: "ORD-4521",
     respond_by_offset_hours: 18,
-    description: "High-confidence INR defense with delivered tracking, signed POD, invoice, and translated customer complaint.",
+    description: "Chargeback intake opens with no deduction yet; the case becomes a strong contest once delivery, POD, invoice, and translated complaint evidence are assembled.",
     expected_recommendation: "Contest",
     expected_confidence: "High",
     evidence_score: 1.0,
+    payment_method: "upi",
     highlights: [
-      "Payment captured (Razorpay)",
-      "Order shipped (Shopify ORD-4521)",
-      "AWB SHP789012 - Delivered",
+      "Webhook arrives as payment.dispute.created",
+      "Status open | phase chargeback | amount_deducted Rs 0",
+      "AWB SHP789012 delivered with signed POD",
       "POD signed by P. Sharma",
       "Invoice INV-4521 (Rs 2,499)",
       "Hindi complaint translated",
-      "Merchant policy: Contest",
+      "Evidence pack supports contest submission",
     ],
   },
   {
@@ -53,26 +64,34 @@ export const SCENARIOS: ScenarioDefinition[] = [
     label: "Vernacular Evidence Recovery",
     merchant_name: "House of Sarees",
     amount: 5899,
-    amount_deducted: 5899,
+    amount_deducted: 0,
     payment_id: "pay_def456",
     reason_code: "products_not_received",
     phase: "pre_arbitration",
-    external_status: "under_review",
+    external_status: "open",
     network: "NetBanking",
     merchant_reference: "ORD-7832",
     respond_by_offset_hours: 32,
-    description: "Medium-confidence defense driven by WhatsApp OCR and translation, with invoice missing and approval required.",
+    description: "Pre-arbitration intake starts open, then moves to under_review after a translated WhatsApp acknowledgement and supporting delivery evidence are assembled.",
     expected_recommendation: "Contest",
     expected_confidence: "Medium",
     evidence_score: 0.875,
+    payment_method: "netbanking",
+    lifecycle_events: [
+      {
+        event_type: "payment.dispute.under_review",
+        external_status: "under_review",
+        amount_deducted: 0,
+      },
+    ],
     highlights: [
-      "Payment captured (Razorpay)",
-      "Order shipped (Shopify ORD-7832)",
-      "AWB SHP345678 - Delivered",
+      "Webhook opens in pre_arbitration phase",
+      "WhatsApp OCR + translation capture customer acknowledgement",
+      "AWB SHP345678 delivered with POD",
       "POD signed by M. Iyer",
-      "WhatsApp OCR: 'haan, order mil gaya'",
+      "Invoice missing keeps confidence at medium",
       "Invoice missing",
-      "Approval required",
+      "Follow-up webhook moves dispute to under_review",
     ],
   },
   {
@@ -80,25 +99,26 @@ export const SCENARIOS: ScenarioDefinition[] = [
     label: "RTO Refund Decision",
     merchant_name: "Gadget Lane",
     amount: 14999,
-    amount_deducted: 14999,
+    amount_deducted: 0,
     payment_id: "pay_ghi789",
     reason_code: "products_not_received",
     phase: "chargeback",
-    external_status: "needs_response",
+    external_status: "open",
     network: "Visa",
     merchant_reference: "ORD-2291",
     respond_by_offset_hours: 6,
-    description: "High-confidence acceptance because the shipment went RTO after the customer refused delivery.",
+    description: "Chargeback opens with the payment captured but not yet deducted; carrier telemetry shows RTO after customer refusal, so acceptance is recommended but must stay approver-confirmed.",
     expected_recommendation: "Accept",
     expected_confidence: "High",
     evidence_score: 0.5,
+    payment_method: "card",
     highlights: [
-      "Payment captured (Razorpay)",
-      "Order shipped (Shopify ORD-2291)",
-      "DHL AWB - RTO initiated",
+      "Webhook arrives as payment.dispute.created",
+      "Status open | amount_deducted Rs 0 until a lost outcome",
+      "DHL AWB shows customer refused delivery",
       "Customer refused delivery",
       "No POD available",
-      "Policy: Accept RTO immediately",
+      "Acceptance remains irreversible and approval-gated",
     ],
   },
   {
@@ -110,22 +130,31 @@ export const SCENARIOS: ScenarioDefinition[] = [
     payment_id: "pay_jkl012",
     reason_code: "products_not_received",
     phase: "retrieval",
-    external_status: "needs_response",
+    external_status: "open",
     network: "UPI",
     merchant_reference: "ORD-8801",
     respond_by_offset_hours: -6,
-    description: "Low-confidence case with poor fulfillment telemetry and missing merchant artifacts, requiring human review.",
+    description: "Retrieval-phase dispute opens with almost no merchant artifacts; once an incomplete packet is sent, Razorpay requests rework and the case loops back for escalation.",
     expected_recommendation: "Escalate",
     expected_confidence: "Low",
     evidence_score: 0.25,
+    payment_method: "upi",
+    lifecycle_events: [
+      {
+        event_type: "payment.dispute.action_required",
+        external_status: "open",
+        amount_deducted: 0,
+        action_required_reason: "Submitted evidence packet was incomplete: tracking and invoice artifacts were missing or unreadable.",
+      },
+    ],
     highlights: [
-      "Payment captured (Razorpay)",
-      "Order unfulfilled (Shopify ORD-8801)",
+      "Webhook opens in retrieval phase with overdue SLA",
+      "Order remains unfulfilled and no AWB is assigned",
       "No AWB assigned",
       "No logistics tracking",
       "No POD",
       "No invoice",
-      "No support record",
+      "Follow-up action_required event sends the case back for rework",
     ],
   },
 ];

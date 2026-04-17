@@ -25,15 +25,36 @@ const MONO = "'Space Mono', monospace";
 const SYNE = "'Syne', sans-serif";
 const CASE_MONO = "'IBM Plex Mono', monospace";
 
-function getDisputePayload(payload: unknown): Record<string, any> | null {
+function normalizeWebhookPayload(payload: unknown): Record<string, any> | null {
   if (!payload) return null;
 
   try {
-    const parsed = typeof payload === "string" ? JSON.parse(payload) : payload;
-    return (parsed as any)?.dispute ?? null;
+    return typeof payload === "string" ? JSON.parse(payload) : (payload as Record<string, any>);
   } catch {
     return null;
   }
+}
+
+function getDisputePayload(payload: unknown): Record<string, any> | null {
+  const normalized = normalizeWebhookPayload(payload);
+  if (!normalized) return null;
+  return normalized?.payload?.dispute?.entity ?? normalized?.dispute ?? null;
+}
+
+function getPaymentPayload(payload: unknown): Record<string, any> | null {
+  const normalized = normalizeWebhookPayload(payload);
+  if (!normalized) return null;
+  return normalized?.payload?.payment?.entity ?? null;
+}
+
+function getMerchantLabel(dispute: Record<string, any> | null, payment: Record<string, any> | null): string {
+  const notes = payment?.notes && !Array.isArray(payment.notes) ? payment.notes : {};
+  return dispute?.merchant_name ?? notes?.merchant_name ?? "Merchant of record unavailable";
+}
+
+function getMerchantReference(dispute: Record<string, any> | null, payment: Record<string, any> | null): string | null {
+  const notes = payment?.notes && !Array.isArray(payment.notes) ? payment.notes : {};
+  return notes?.merchant_reference ?? dispute?.merchant_reference ?? payment?.order_id ?? null;
 }
 
 function MetricCard({
@@ -299,11 +320,13 @@ export default function DashboardPage() {
             >
               {events.slice(0, 5).map((event) => {
                 const dispute = getDisputePayload(event.payload_json);
-                const merchantName = dispute?.merchant_name ?? "Merchant of record unavailable";
-                const paymentId = dispute?.payment_id ?? "Payment id unavailable";
+                const payment = getPaymentPayload(event.payload_json);
+                const merchantName = getMerchantLabel(dispute, payment);
+                const paymentId = dispute?.payment_id ?? payment?.id ?? "Payment id unavailable";
                 const phase = dispute?.phase ? String(dispute.phase).replace(/_/g, " ").toUpperCase() : "PHASE UNKNOWN";
                 const status = dispute?.status ? String(dispute.status).replace(/_/g, " ").toUpperCase() : "STATUS UNKNOWN";
-                const merchantReference = dispute?.merchant_reference ? String(dispute.merchant_reference).toUpperCase() : null;
+                const merchantReferenceRaw = getMerchantReference(dispute, payment);
+                const merchantReference = merchantReferenceRaw ? String(merchantReferenceRaw).toUpperCase() : null;
                 const amount =
                   typeof dispute?.amount === "number" ? formatCurrency(dispute.amount / 100, dispute.currency ?? "INR") : null;
 
