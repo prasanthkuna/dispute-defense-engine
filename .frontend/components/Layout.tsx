@@ -21,13 +21,17 @@ export default function Layout() {
       {/* Sidebar - Premium Razorpay Aesthetic */}
       <aside className="w-64 bg-secondary border-r border-border flex flex-col shrink-0 z-20 transition-all duration-500 shadow-[20px_0_40px_-20px_rgba(0,0,0,0.5)]">
         {/* Logo Section */}
-        <div className="p-8 border-b border-border/40 flex items-center gap-4 group cursor-pointer">
-          <div className="bg-primary rounded-lg w-10 h-10 flex items-center justify-center shadow-[0_0_20px_rgba(19,100,241,0.3)] group-hover:scale-110 transition-transform duration-300">
-            <Shield size={20} className="text-primary-foreground" />
+        <div className="p-8 border-b border-border/40 flex flex-col gap-4 group cursor-pointer">
+          <div className="flex items-center gap-3">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" 
+              alt="Razorpay" 
+              className="h-7 w-auto group-hover:scale-105 transition-transform duration-300 brightness-0 invert"
+            />
           </div>
-          <div className="transition-all duration-300 group-hover:translate-x-1">
-            <div className="font-display font-bold text-[16px] text-foreground tracking-tight leading-none">RAZOR.DEFENSE</div>
-            <div className="text-[8px] text-primary mt-1.5 tracking-[0.25em] font-bold uppercase opacity-60">Fintech Intelligence</div>
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-px bg-primary/40" />
+            <div className="text-[10px] text-primary font-bold tracking-[0.2em] uppercase opacity-70">Dispute Defense</div>
           </div>
         </div>
 
