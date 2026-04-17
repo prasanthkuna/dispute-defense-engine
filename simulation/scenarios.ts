@@ -18,6 +18,12 @@ export interface ScenarioDefinition {
   expected_confidence: "High" | "Medium" | "Low";
   evidence_score: number;
   highlights: string[];
+  lifecycle_events?: {
+    event_type: string;
+    external_status: string;
+    amount_deducted?: number;
+    action_required_reason?: string;
+  }[];
 }
 
 export const SCENARIOS: ScenarioDefinition[] = [
@@ -73,6 +79,13 @@ export const SCENARIOS: ScenarioDefinition[] = [
       "WhatsApp OCR: 'haan, order mil gaya'",
       "Invoice missing",
       "Approval required",
+    ],
+    lifecycle_events: [
+      {
+        event_type: "payment.dispute.action_required",
+        external_status: "action_required",
+        action_required_reason: "Submit additional counter-evidence in English or translated from vernacular.",
+      },
     ],
   },
   {

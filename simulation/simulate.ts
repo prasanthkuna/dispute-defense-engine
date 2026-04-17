@@ -20,6 +20,43 @@ function isoFromOffset(hoursFromNow: number): string {
   return new Date(Date.now() + hoursFromNow * 60 * 60 * 1000).toISOString();
 }
 
+function buildWebhookPayload(params: {
+  scenario: ScenarioDefinition;
+  disputeId: string;
+  respondBy: string;
+  eventType: RazorpayDisputeEventType;
+  externalStatus?: string;
+  amountDeducted?: number;
+  actionRequiredReason?: string;
+}): DisputeWebhookPayload {
+  const createdAtUnix = Math.floor(Date.now() / 1000);
+  return {
+    entity: "event",
+    account_id: "acc_dde_demo",
+    event: params.eventType,
+    contains: ["dispute"],
+    payload: {
+      dispute: {
+        id: params.disputeId,
+        payment_id: params.scenario.payment_id,
+        amount: Math.round(params.scenario.amount * 100),
+        amount_deducted: Math.round((params.amountDeducted ?? params.scenario.amount_deducted) * 100),
+        currency: "INR",
+        reason_code: params.scenario.reason_code,
+        respond_by: params.respondBy,
+        status: params.externalStatus ?? params.scenario.external_status,
+        phase: params.scenario.phase,
+        network: params.scenario.network,
+        merchant_name: params.scenario.merchant_name,
+        merchant_reference: params.scenario.merchant_reference,
+        action_required_reason: params.actionRequiredReason,
+        created_at: createdAtUnix,
+      },
+    },
+    created_at: createdAtUnix,
+  } as any;
+}
+
 export async function runScenario(scenario_type: ScenarioType): Promise<SimulateResponse> {
   const scenario = SCENARIOS.find((item) => item.type === scenario_type);
   if (!scenario) throw new Error(`Unknown scenario: ${scenario_type}`);
@@ -27,32 +64,17 @@ export async function runScenario(scenario_type: ScenarioType): Promise<Simulate
   const disputeId = `DISP-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;
   const respondBy = isoFromOffset(scenario.respond_by_offset_hours);
 
-  const payload: DisputeWebhookPayload = {
-    dispute: {
-      id: disputeId,
-      payment_id: scenario.payment_id,
-      amount: Math.round(scenario.amount * 100),
-      amount_deducted: Math.round(scenario.amount_deducted * 100),
-      currency: "INR",
-      reason_code: scenario.reason_code,
-      respond_by: respondBy,
-      status: scenario.external_status,
-      phase: scenario.phase,
-      network: scenario.network,
-      merchant_name: scenario.merchant_name,
-      merchant_reference: scenario.merchant_reference,
-      created_at: Math.floor(Date.now() / 1000),
-    },
-  };
-
   const eventType: RazorpayDisputeEventType = "payment.dispute.created";
-  const ingestResult = await ingest.ingestEvent({
-    external_event_id: disputeId,
+  const { case_id: caseId } = await ingest.ingestEvent({
+    external_event_id: `${disputeId}:created`,
     event_type: eventType,
-    payload,
+    payload: buildWebhookPayload({
+      scenario,
+      disputeId,
+      respondBy,
+      eventType,
+    }),
   });
-
-  const caseId = ingestResult.case_id;
 
   await db.exec`
     UPDATE cases
@@ -78,8 +100,25 @@ export async function runScenario(scenario_type: ScenarioType): Promise<Simulate
 
   await agent.runAgent({ case_id: caseId, scenario_type });
 
-  const caseRow = await db.queryRow<Case>`SELECT * FROM cases WHERE id = ${caseId}`;
+  if (scenario.lifecycle_events?.length) {
+    for (const lifecycleEvent of scenario.lifecycle_events) {
+      await ingest.ingestEvent({
+        external_event_id: `${disputeId}:${lifecycleEvent.event_type.split(".").pop()}`,
+        event_type: lifecycleEvent.event_type as RazorpayDisputeEventType,
+        payload: buildWebhookPayload({
+          scenario,
+          disputeId,
+          respondBy,
+          eventType: lifecycleEvent.event_type as RazorpayDisputeEventType,
+          externalStatus: lifecycleEvent.external_status,
+          amountDeducted: lifecycleEvent.amount_deducted ?? scenario.amount_deducted,
+          actionRequiredReason: lifecycleEvent.action_required_reason,
+        }),
+      });
+    }
+  }
 
+  const caseRow = await db.queryRow<Case>`SELECT * FROM cases WHERE id = ${caseId}`;
   return { case_id: caseId, case: caseRow! };
 }
 

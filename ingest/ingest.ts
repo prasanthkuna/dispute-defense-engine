@@ -47,8 +47,9 @@ export const ingestEvent = api<IngestEventParams, IngestEventResponse>(
       throw APIError.invalidArgument("invalid Razorpay dispute event_type");
     }
 
-    if (!params.payload?.dispute?.id || !params.payload.dispute.payment_id) {
-      throw APIError.invalidArgument("payload.dispute.id and payload.dispute.payment_id are required");
+    const dispute = "payload" in params.payload ? params.payload.payload.dispute : params.payload.dispute;
+    if (!dispute?.id || !dispute?.payment_id) {
+      throw APIError.invalidArgument("dispute.id and dispute.payment_id are required");
     }
 
     const existingEvent = await db.queryRow<{ id: string }>`
@@ -56,12 +57,11 @@ export const ingestEvent = api<IngestEventParams, IngestEventResponse>(
     `;
     if (existingEvent) {
       const existingCase = await db.queryRow<{ id: string }>`
-        SELECT id FROM cases WHERE dispute_id = ${params.payload.dispute.id}
+        SELECT id FROM cases WHERE dispute_id = ${dispute.id}
       `;
       return { case_id: existingCase?.id ?? "unknown", is_duplicate_event: true };
     }
 
-    const { dispute } = params.payload;
     const existingCase = await db.queryRow<{ id: string; status: CaseStatus | null }>`
       SELECT id, status FROM cases WHERE dispute_id = ${dispute.id}
     `;

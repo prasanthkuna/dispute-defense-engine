@@ -34,9 +34,22 @@ export interface RazorpayDisputePayload {
   created_at: number;
 }
 
-export interface DisputeWebhookPayload {
+export interface LegacyDisputeWebhookPayload {
   dispute: RazorpayDisputePayload;
 }
+
+export interface RazorpayWebhookEnvelope {
+  entity: "event";
+  account_id: string;
+  event: RazorpayDisputeEventType;
+  contains: string[];
+  payload: {
+    dispute: RazorpayDisputePayload;
+  };
+  created_at: number;
+}
+
+export type DisputeWebhookPayload = LegacyDisputeWebhookPayload | RazorpayWebhookEnvelope;
 
 export interface IngestedEvent {
   id: string;

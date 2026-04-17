@@ -30,7 +30,8 @@ function getDisputePayload(payload: unknown): Record<string, any> | null {
 
   try {
     const parsed = typeof payload === "string" ? JSON.parse(payload) : payload;
-    return (parsed as any)?.dispute ?? null;
+    if (!parsed) return null;
+    return (parsed as any)?.payload?.dispute ?? (parsed as any)?.dispute ?? null;
   } catch {
     return null;
   }
@@ -297,7 +298,7 @@ export default function DashboardPage() {
                 flex: 1,
               }}
             >
-              {events.slice(0, 5).map((event) => {
+              {events.map((event) => {
                 const dispute = getDisputePayload(event.payload_json);
                 const merchantName = dispute?.merchant_name ?? "Merchant of record unavailable";
                 const paymentId = dispute?.payment_id ?? "Payment id unavailable";
